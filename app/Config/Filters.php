@@ -36,6 +36,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'session'       => SessionAuth::class,
+        'group' => \CodeIgniter\Shield\Filters\GroupFilter::class,
     ];
 
     /**
@@ -73,6 +74,7 @@ class Filters extends BaseFilters
         'before' => [
             // 'honeypot',
             'csrf',
+            'session' => ['except' => ['login*', 'register', 'auth/a/*', 'logout']],
             // 'invalidchars',
         ],
         'after' => [
