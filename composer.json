@@ -12,8 +12,8 @@
     "require": {
         "php": "^8.1",
         "codeigniter4/framework": "^4.0",
-        "codeigniter4/translations": "dev-develop",
-        "myth/auth": "^1.2"
+        "codeigniter4/shield": "^1.1",
+        "codeigniter4/translations": "dev-develop"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",
