@@ -20,7 +20,7 @@ class UserController extends BaseController
     public function create()
     {
         // ビューを表示
-        return view('admin/register');
+        return view('admin/user_form');
     }
 
     public function store()
@@ -62,7 +62,7 @@ class UserController extends BaseController
             return redirect()->route('admin.users.index')->with('error', 'ユーザーが見つかりません。');
         }
 
-        return view('admin/user_edit', ['user' => $user]);
+        return view('admin/user_form', ['user' => $user]);
     }
 
     public function update($id)

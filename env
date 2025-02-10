@@ -32,7 +32,7 @@ CI_ENVIRONMENT = development
 #--------------------------------------------------------------------
 
 database.default.hostname = 172.18.100.180
-database.default.database = deviceUsageTrackerDB
+database.default.database = resourceUsageTrackerDB
 database.default.username = devuser1
 database.default.password = devuser1
 database.default.DBDriver = MySQLi

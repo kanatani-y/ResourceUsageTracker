@@ -29,7 +29,7 @@ class Database extends Config
         'hostname'     => '172.18.100.180',
         'username'     => 'devuser1',
         'password'     => 'devuser1',
-        'database'     => 'deviceUsageTrackerDB',
+        'database'     => 'resourceUsageTrackerDB',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
