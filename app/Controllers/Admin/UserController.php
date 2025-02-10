@@ -5,7 +5,7 @@ namespace App\Controllers\Admin;
 use CodeIgniter\I18n\Time;
 use App\Controllers\BaseController;
 use CodeIgniter\Shield\Entities\User;
-use CodeIgniter\Shield\Models\UserModel;
+use App\Models\UserModel;
 
 class UserController extends BaseController
 {
@@ -30,6 +30,7 @@ class UserController extends BaseController
         $user = new User([
             'email'    => $this->request->getPost('email'),
             'username' => $this->request->getPost('username'),
+            'fullname' => $this->request->getPost('fullname'),
             'password' => $this->request->getPost('password'),
             'active'   => $this->request->getPost('active'),
             'last_active' => Time::now(), // 現在の日時を設定
@@ -73,17 +74,44 @@ class UserController extends BaseController
             return redirect()->route('admin.users.index')->with('error', 'ユーザーが見つかりません。');
         }
 
-        $user->fill($this->request->getPost());
+        // **Administrator の場合は role と active を変更不可にする**
+        if ($user->username === 'admin') {
+            if ($this->request->getPost('role') !== 'admin' || $this->request->getPost('active') !== (string) $user->active) {
+                return redirect()->back()->with('error', 'Administrator の役割やアカウント状態は変更できません。');
+            }
+        }
+
+        // 更新データを作成
+        $updateData = [
+            'fullname' => $this->request->getPost('fullname'),
+        ];
+
+        // **Administrator 以外は role と active を更新可能**
+        if ($user->username !== 'admin') {
+            $updateData['role'] = $this->request->getPost('role');
+            $updateData['active'] = $this->request->getPost('active');
+        }
+
+        // パスワード変更がある場合のみ更新
+        $password = $this->request->getPost('password');
+        if (!empty($password)) {
+            $updateData['password'] = $password;
+        }
+
+        $user->fill($updateData);
 
         if (! $users->save($user)) {
             return redirect()->back()->withInput()->with('errors', $users->errors());
         }
 
-        // 役割を更新
-        $role = $this->request->getPost('role');
-        if ($role) {
-            $user->syncGroups($role);
+        // 役割を更新（Administrator 以外のみ）
+        if ($user->username !== 'admin') {
+            $role = $this->request->getPost('role');
+            if ($role) {
+                $user->syncGroups($role);
+            }
         }
+
         return redirect()->route('admin.users.index')->with('message', 'ユーザー情報が更新されました。');
     }
 

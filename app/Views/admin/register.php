@@ -1,12 +1,12 @@
-<?= $this->extend('layouts/admin') ?>
+<?= $this->extend('layouts/layout') ?>
 
 <?= $this->section('title') ?><?= lang('Auth.register') ?><?= $this->endSection() ?>
 
 <?= $this->section('main') ?>
-    <div class="container d-flex justify-content-center p-5">
+    <div class="container d-flex justify-content-center p-2">
         <div class="card col-12 col-md-5 shadow-sm">
             <div class="card-body">
-                <h5 class="card-title mb-5"><?= lang('Auth.register') ?></h5>
+                <h4 class="card-title mb-2"><?= lang('Auth.register') ?></h5>
 
                 <?php if (session('error') !== null) : ?>
                     <div class="alert alert-danger" role="alert"><?= session('error') ?></div>
@@ -35,6 +35,11 @@
                     <div class="form-floating mb-4">
                         <input type="text" class="form-control" id="floatingUsernameInput" name="username" inputmode="text" autocomplete="username" placeholder="<?= lang('Auth.username') ?>" value="<?= old('username') ?>" required>
                         <label for="floatingUsernameInput"><?= lang('Auth.username') ?></label>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <label for="fullname" class="form-label">氏名</label>
+                        <input type="text" class="form-control" name="fullname" id="fullname" required>
                     </div>
 
                     <!-- Password -->

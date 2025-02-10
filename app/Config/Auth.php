@@ -227,6 +227,19 @@ class Auth extends ShieldAuth
         ],
     ];
 
+    public array $fullnameValidationRules = [
+        'label' => 'Auth.fullname',
+        'rules' => [
+            'required',
+            'max_length[255]',
+            'regex_match[/^[\p{L}\p{M}]+[\s　][\p{L}\p{M}]+$/u]', // 「姓 名」形式を強制
+        ],
+        'errors' => [
+            'regex_match' => '姓と名の間に全角スペースを入れて入力してください。（例: 山田　太郎）',
+        ],
+    ];
+    
+
     /**
      * --------------------------------------------------------------------
      * The validation rules for email
@@ -237,12 +250,6 @@ class Auth extends ShieldAuth
      * @var array<string, array<int, string>|string>
      */
     public array $emailValidationRules = [
-        'label' => 'Auth.email',
-        'rules' => [
-            'required',
-            'max_length[254]',
-            'valid_email',
-        ],
     ];
 
     /**
@@ -279,8 +286,8 @@ class Auth extends ShieldAuth
      * Fields that are available to be used as credentials for login.
      */
     public array $validFields = [
-        'email',
-        // 'username',
+        // 'email',
+        'username',
     ];
 
     /**
@@ -297,7 +304,9 @@ class Auth extends ShieldAuth
      * For example:
      *     $personalFields = ['firstname', 'lastname'];
      */
-    public array $personalFields = [];
+    public array $personalFields = [
+        'fullname',
+    ];
 
     /**
      * --------------------------------------------------------------------
@@ -428,7 +437,7 @@ class Auth extends ShieldAuth
      *
      * @var class-string<UserModel>
      */
-    public string $userProvider = UserModel::class;
+    public string $userProvider = \App\Models\UserModel::class;
 
     /**
      * Returns the URL that a user should be redirected

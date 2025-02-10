@@ -8,12 +8,20 @@
 
     <!-- Bootstrap core CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
+    <style>
+        /* ナビバーの高さを考慮して main に余白を追加 */
+        body {
+            padding-top: 56px; /* navbar の高さ分 */
+        }
+    </style>
 
     <?= $this->renderSection('pageStyles') ?>
 </head>
 
 <body class="bg-light">
-    <nav class="navbar navbar-expand-lg bg-body-tertiary bg-secondary">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary bg-secondary fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand text-light" href="<?= site_url('/') ?>">Device Usage Tracker</a>
 
@@ -52,11 +60,17 @@
                             </ul>
                         </li>
 
-                        <!-- ログアウトボタン -->
-                        <li class="nav-item">
+                        <!-- 氏名 -->
+                        <li class="nav-item dropdown ms-5">
+                            <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                <i class="bi bi-person-circle me-2"></i> 
+                                <?= esc(auth()->user()->fullname ?? auth()->user()->username) ?> さん</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="javascript:confirmLogout();">ログアウト</a></li>
+                            </ul>
                             <form id="logoutForm" action="<?= route_to('logout') ?>" method="post" class="d-inline">
                                 <?= csrf_field() ?>
-                                <button type="button" class="btn btn-danger btn-sm ms-3 mt-1" onclick="confirmLogout()">ログアウト</button>
                             </form>
                         </li>
                     </ul>
@@ -65,9 +79,7 @@
         </div>
     </nav>
 
-    <br><br><br>
-
-    <main role="main" class="container">
+    <main role="main" class="container mt-3">
         <?= $this->renderSection('main') ?>
     </main>
 

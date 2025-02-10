@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/admin') ?>
+<?= $this->extend('layouts/layout') ?>
 
 <?= $this->section('title') ?>
 ユーザー一覧
@@ -9,8 +9,8 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('main') ?>
-<div class="container mt-5">
-    <h1 class="mb-4">ユーザー一覧</h1>
+<div class="container">
+    <h4 class="mb-2">ユーザー一覧</h4>
 
     <?php if (session()->getFlashdata('message')): ?>
         <div class="alert alert-success">
@@ -18,11 +18,12 @@
         </div>
     <?php endif; ?>
 
-    <table class="table table-striped">
+    <table class="table table-striped mt-2">
         <thead>
             <tr>
                 <th>ID</th>
                 <th>ユーザー名</th>
+                <th>氏名</th>
                 <th>種別</th>
                 <th>ステータス</th>
                 <th>最終アクティブ日時</th>
@@ -34,20 +35,28 @@
                 <tr>
                     <td><?= esc($user->id) ?></td>
                     <td><?= esc($user->username) ?></td>
+                    <td><?= esc($user->fullname ?? '-') ?></td>
                     <td>
-                        <?php
-                        $group = match (true) {
-                            in_array('admin', $user->getGroups(), true) => '管理者',
-                            in_array('guest', $user->getGroups(), true) => 'ゲスト',
-                            default => '一般',
-                        };
-                        ?>
+                    <?php 
+                    $groups = $user->getGroups() ?? [];
+                    $groupLabel = '一般';
+
+                    if (in_array('admin', $groups, true)) {
+                        $groupLabel = '管理者';
+                    } elseif (in_array('guest', $groups, true)) {
+                        $groupLabel = 'ゲスト';
+                    }
+                    
+                    echo esc($groupLabel);
+                    ?>
                     </td>
                     <td><?= $user->active ? '有効' : '無効' ?></td>
                     <td><?= $user->last_active ? $user->last_active->toLocalizedString('yyyy-MM-dd HH:mm:ss') : '未アクティブ' ?></td>
-                    <td>
-                        <a href="<?= site_url('admin/users/edit/' . $user->id) ?>" class="btn btn-sm btn-primary">編集</a>
-                        <a href="<?= site_url('admin/users/delete/' . $user->id) ?>" class="btn btn-sm btn-danger" onclick="return confirm('本当に削除しますか？')">削除</a>
+                    <td class="text-nowrap" style="width: 180px;">
+                        <div class="btn-group" role="group">
+                            <a href="<?= site_url('admin/users/edit/' . $user->id) ?>" class="btn btn-sm btn-primary">編集</a>
+                            <a href="<?= site_url('admin/users/delete/' . $user->id) ?>" class="btn btn-sm btn-danger" onclick="return confirm('本当に削除しますか？')">削除</a>
+                        </div>
                     </td>
                 </tr>
             <?php endforeach; ?>
