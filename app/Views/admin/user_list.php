@@ -10,7 +10,12 @@
 
 <?= $this->section('main') ?>
 <div class="container">
-    <h4 class="mb-2">ユーザー一覧</h4>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4 class="mb-0">ユーザー一覧</h4>
+        <a href="<?= route_to('admin.register') ?>" class="btn btn-sm btn-success float-end">
+            <i class="bi bi-plus-lg"></i> 追加
+        </a>
+    </div>
 
     <?php if (session()->getFlashdata('message')): ?>
         <div class="alert alert-success">
@@ -52,10 +57,13 @@
                     </td>
                     <td><?= $user->active ? '有効' : '無効' ?></td>
                     <td><?= $user->last_active ? $user->last_active->toLocalizedString('yyyy-MM-dd HH:mm:ss') : '未アクティブ' ?></td>
-                    <td class="text-nowrap" style="width: 180px;">
+                    <td class="text-nowrap" style="width: 150px;">
                         <div class="btn-group" role="group">
-                            <a href="<?= site_url('admin/users/edit/' . $user->id) ?>" class="btn btn-sm btn-primary">編集</a>
-                            <a href="<?= site_url('admin/users/delete/' . $user->id) ?>" class="btn btn-sm btn-danger" onclick="return confirm('本当に削除しますか？')">削除</a>
+                            
+                            <?php if ($user->username !== 'admin' && $user->id !== auth()->user()->id): ?>
+                                <a href="<?= site_url('admin/users/edit/' . $user->id) ?>" class="btn btn-sm btn-primary">編集</a>
+                                <a href="<?= site_url('admin/users/delete/' . $user->id) ?>" class="btn btn-sm btn-danger" onclick="return confirm('本当に削除しますか？')">削除</a>
+                            <?php endif; ?>
                         </div>
                     </td>
                 </tr>
