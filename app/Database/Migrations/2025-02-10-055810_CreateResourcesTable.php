@@ -9,7 +9,7 @@ class CreateResourcesTable extends Migration
     public function up()
     {
         $this->forge->addField([
-            'id'          => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
+            'id'          => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
             'name'        => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => false],
             'type'        => ['type' => 'ENUM', 'constraint' => ['PC', 'Server', 'Network', 'Storage', 'Other'], 'default' => 'Other', 'null' => false],
             'os'          => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],

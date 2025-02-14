@@ -42,7 +42,7 @@ class ResourceModel extends Model
             'label' => 'リソース名'
         ],
         'hostname' => [
-            'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9.-]+$/]',
+            'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9.-]+$/]|is_unique[resources.hostname]',
             'label' => 'ホスト名',
             'errors' => [
                 'regex_match' => 'ホスト名は英数字、ドット、ハイフンのみ使用できます。',

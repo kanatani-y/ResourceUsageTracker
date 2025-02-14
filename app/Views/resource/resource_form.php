@@ -1,6 +1,6 @@
 <?= $this->extend('layouts/layout') ?>
 
-<?= $this->section('title') ?><?= isset($resource) ? 'リソース編集' : '新規リソース登録' ?><?= $this->endSection() ?>
+<?= $this->section('title') ?>新規予約<?= $this->endSection() ?>
 
 <?= $this->section('main') ?>
 <div class="container">
@@ -9,116 +9,70 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
-                        <i class="bi <?= isset($resource) ? 'bi-pencil-square' : 'bi-plus-square' ?>"></i>
-                        <?= isset($resource) ? 'リソース編集' : '新規リソース登録' ?>
+                        <i class="bi bi-calendar-plus"></i> 新規予約
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="<?= isset($resource) ? route_to('resource.update', $resource['id']) : route_to('resource.store') ?>" method="post">
+                    <form action="<?= route_to('reservation.store') ?>" method="post">
                         <?= csrf_field() ?>
 
                         <div class="row">
-                            <!-- リソース名 -->
+                            <!-- リソース選択 -->
                             <div class="col-md-6 mb-3">
-                                <label for="name" class="form-label">リソース名</label>
-                                <input type="text" class="form-control" id="name" name="name" 
-                                    value="<?= old('name', $resource['name'] ?? '') ?>" required>
-                            </div>
-
-                            <!-- ホスト名 -->
-                            <div class="col-md-6 mb-3">
-                                <label for="hostname" class="form-label">ホスト名</label>
-                                <input type="text" class="form-control" id="hostname" name="hostname" 
-                                    value="<?= old('hostname', $resource['hostname'] ?? '') ?>" required>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <!-- 種類 -->
-                            <div class="col-md-6 mb-3">
-                                <label for="type" class="form-label">種類</label>
-                                <select class="form-select" id="type" name="type" required>
-                                    <option value="PC" <?= old('type', $resource['type'] ?? '') === 'PC' ? 'selected' : '' ?>>PC</option>
-                                    <option value="Server" <?= old('type', $resource['type'] ?? '') === 'Server' ? 'selected' : '' ?>>Server</option>
-                                    <option value="Network" <?= old('type', $resource['type'] ?? '') === 'Network' ? 'selected' : '' ?>>Network</option>
-                                    <option value="Storage" <?= old('type', $resource['type'] ?? '') === 'Storage' ? 'selected' : '' ?>>Storage</option>
-                                    <option value="Other" <?= old('type', $resource['type'] ?? 'Other') === 'Other' ? 'selected' : '' ?>>Other</option>
+                                <label for="resource_id" class="form-label">リソース</label>
+                                <select name="resource_id" id="resource_id" class="form-select" required>
+                                    <option value="">リソースを選択</option>
+                                    <?php foreach ($resources as $res): ?>
+                                        <option value="<?= esc($res['id']) ?>" <?= ($resource_id == $res['id']) ? 'selected' : '' ?>>
+                                            <?= esc($res['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
 
-                            <!-- OS -->
+                            <!-- アカウント選択 -->
                             <div class="col-md-6 mb-3">
-                                <label for="os" class="form-label">OS</label>
-                                <input type="text" class="form-control" id="os" name="os" 
-                                    value="<?= old('os', $resource['os'] ?? '') ?>">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <!-- IPアドレス -->
-                            <div class="col-md-6 mb-3">
-                                <label for="ip_address" class="form-label">IPアドレス</label>
-                                <input type="text" class="form-control" id="ip_address" name="ip_address" 
-                                    value="<?= old('ip_address', $resource['ip_address'] ?? '') ?>">
-                            </div>
-
-                            <!-- CPU -->
-                            <div class="col-md-6 mb-3">
-                                <label for="cpu" class="form-label">CPU</label>
-                                <input type="text" class="form-control" id="cpu" name="cpu" 
-                                    value="<?= old('cpu', $resource['cpu'] ?? '') ?>">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <!-- メモリ -->
-                            <div class="col-md-6 mb-3">
-                                <label for="memory" class="form-label">メモリ</label>
-                                <input type="text" class="form-control" id="memory" name="memory" 
-                                    value="<?= old('memory', $resource['memory'] ?? '') ?>">
-                            </div>
-
-                            <!-- ストレージ -->
-                            <div class="col-md-6 mb-3">
-                                <label for="storage" class="form-label">ストレージ</label>
-                                <input type="text" class="form-control" id="storage" name="storage" 
-                                    value="<?= old('storage', $resource['storage'] ?? '') ?>">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <!-- ステータス -->
-                            <div class="col-md-6 mb-3">
-                                <label for="status" class="form-label">ステータス</label>
-                                <select class="form-select" id="status" name="status" required>
-                                    <option value="available" <?= old('status', $resource['status'] ?? '') === 'available' ? 'selected' : '' ?>>利用可能</option>
-                                    <option value="in_use" <?= old('status', $resource['status'] ?? '') === 'in_use' ? 'selected' : '' ?>>使用中</option>
-                                    <option value="maintenance" <?= old('status', $resource['status'] ?? '') === 'maintenance' ? 'selected' : '' ?>>メンテナンス中</option>
-                                    <option value="retired" <?= old('status', $resource['status'] ?? '') === 'retired' ? 'selected' : '' ?>>廃止</option>
+                                <label for="account_id" class="form-label">使用するアカウント</label>
+                                <select name="account_id" id="account_id" class="form-select" required>
+                                    <option value="">リソースを選択してください</option>
                                 </select>
                             </div>
-
-                            <!-- 設置場所 -->
-                            <div class="col-md-6 mb-3">
-                                <label for="location" class="form-label">設置場所</label>
-                                <input type="text" class="form-control" id="location" name="location" 
-                                    value="<?= old('location', $resource['location'] ?? '') ?>">
-                            </div>
                         </div>
 
-                        <!-- 説明 -->
-                        <div class="mb-3">
-                            <label for="description" class="form-label">説明</label>
-                            <textarea class="form-control" id="description" name="description" rows="3"><?= old('description', $resource['description'] ?? '') ?></textarea>
+                        <div class="row">
+                            <!-- 予約日 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="date" class="form-label">予約日</label>
+                                <input type="date" class="form-control" id="date" name="date" required>
+                            </div>
+
+                            <!-- 予約時間 -->
+                            <div class="col-md-6 mb-3">
+                                <label for="time_slot" class="form-label">時間帯</label>
+                                <select name="time_slot" id="time_slot" class="form-select" required>
+                                    <option value="">時間帯を選択</option>
+                                    <option value="9:00-10:00">9:00 - 10:00</option>
+                                    <option value="10:00-11:00">10:00 - 11:00</option>
+                                    <option value="11:00-12:00">11:00 - 12:00</option>
+                                    <option value="13:00-14:00">13:00 - 14:00</option>
+                                    <option value="14:00-15:00">14:00 - 15:00</option>
+                                    <option value="15:00-16:00">15:00 - 16:00</option>
+                                    <option value="16:00-17:00">16:00 - 17:00</option>
+                                    <option value="17:00-18:00">17:00 - 18:00</option>
+                                    <option value="morning">午前（9:00 - 12:00）</option>
+                                    <option value="afternoon">午後（13:00 - 18:00）</option>
+                                    <option value="full_day">終日（9:00 - 18:00）</option>
+                                </select>
+                            </div>
                         </div>
 
                         <!-- ボタン -->
                         <div class="d-flex justify-content-between">
-                            <a href="<?= site_url('resource') ?>" class="btn btn-secondary">
+                            <a href="<?= site_url('reservation') ?>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> <?= isset($resource) ? '更新' : '登録' ?>
+                                <i class="bi bi-save"></i> 予約する
                             </button>
                         </div>
                     </form>
@@ -127,4 +81,36 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const resourceSelect = document.getElementById("resource_id");
+    const accountSelect = document.getElementById("account_id");
+
+    function fetchAccounts(resourceId) {
+        fetch("<?= site_url('api/accounts/') ?>" + resourceId)
+            .then(response => response.json())
+            .then(data => {
+                accountSelect.innerHTML = '<option value="">アカウントを選択</option>';
+                data.forEach(account => {
+                    const option = document.createElement("option");
+                    option.value = account.id;
+                    option.textContent = account.username;
+                    accountSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error("アカウントの取得に失敗しました:", error));
+    }
+
+    resourceSelect.addEventListener("change", function () {
+        const resourceId = this.value;
+        if (resourceId) {
+            fetchAccounts(resourceId);
+        } else {
+            accountSelect.innerHTML = '<option value="">リソースを選択してください</option>';
+        }
+    });
+});
+</script>
+
 <?= $this->endSection() ?>

@@ -45,3 +45,12 @@ $routes->group('profile', function ($routes) {
     $routes->get('settings', 'ProfileController::settings', ['as' => 'profile.settings']);
     $routes->post('update', 'ProfileController::update', ['as' => 'profile.update']);
 });
+
+$routes->group('reservation', function ($routes) {
+    $routes->get('create', 'ReservationController::create', ['as' => 'reservation.create']);
+    $routes->post('store', 'ReservationController::store', ['as' => 'reservation.store']);
+    $routes->get('edit/(:num)', 'ReservationController::edit/$1', ['as' => 'reservation.edit']);
+    $routes->post('update/(:num)', 'ReservationController::update/$1', ['as' => 'reservation.update']);
+    $routes->post('delete/(:num)', 'ReservationController::delete/$1', ['as' => 'reservation.delete']);
+});
+

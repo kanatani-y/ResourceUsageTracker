@@ -25,9 +25,11 @@ class CreateAdminUser extends Migration
         // ユーザーが既に存在しない場合のみ作成
         $existingAdmin = $users->where('username', 'admin')->first();
         if (!$existingAdmin) {
-            $adminUser = new User($adminData);
-            $users->save($adminUser);
 
+            $adminUser = new User($adminData);
+            // バリデーションをスキップして保存
+            $users->skipValidation(true)->save($adminData); 
+            
             // 保存したユーザーのIDを取得
             $adminId = $users->getInsertID();
             log_message('debug', "Admin User ID: {$adminId}");
@@ -35,7 +37,6 @@ class CreateAdminUser extends Migration
             // ユーザーをデータベースから再取得
             $adminUser = $users->findById($adminId);
             if ($adminUser) {
-                // `addGroup()` を使用
                 $adminUser->addGroup('admin');
                 log_message('debug', "Admin added to group: admin");
             }

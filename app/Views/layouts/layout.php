@@ -45,6 +45,11 @@
                                         <i class="bi bi-list-check"></i> 予約状況確認
                                     </a>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= route_to('reservation.create') ?>">
+                                        <i class="bi bi-calendar-plus"></i> 予約登録
+                                    </a>
+                                </li>
                             </ul>
                         </li>
 
@@ -146,7 +151,7 @@
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
-        
+
         <?= $this->renderSection('main') ?>
     </main>
 
