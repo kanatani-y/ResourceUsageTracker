@@ -16,7 +16,7 @@ class ReservationModel extends Model
         'resource_id' => 'required|integer',
         'user_id'     => 'required|integer',
         'start_time'  => 'required|valid_date[Y-m-d H:i:s]',
-        'end_time'    => 'required|valid_date[Y-m-d H:i:s]|after[start_time]',
+        'end_time'    => 'required|valid_date[Y-m-d H:i:s]|validateDateTimeOrder[start_time]',
         'status'      => 'in_list[pending,confirmed,cancelled]',
     ];
 

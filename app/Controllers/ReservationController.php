@@ -47,29 +47,35 @@ class ReservationController extends BaseController
     {
         $reservationModel = new ReservationModel();
     
-        // 日付 + 時刻 を結合して DATETIME 形式に変換
-        $startDateTime = $this->request->getPost('date') . ' ' . $this->request->getPost('start_time') . ':00';
-        $endDateTime   = $this->request->getPost('date') . ' ' . $this->request->getPost('end_time') . ':00';
+        // 入力値取得
+        $reservationDate = $this->request->getPost('reservation_date'); // YYYY-MM-DD
+        $startTime = trim($this->request->getPost('start_time')); // HH:MM
+        $endTime = trim($this->request->getPost('end_time')); // HH:MM
+    
+        // DATETIME 形式に変換
+        $startDateTime = "{$reservationDate} {$startTime}:00";
+        $endDateTime = "{$reservationDate} {$endTime}:00";
     
         $data = [
             'resource_id' => $this->request->getPost('resource_id'),
             'user_id'     => auth()->user()->id,
-            'start_time'  => $startDateTime,
-            'end_time'    => $endDateTime,
+            'start_time'  => $startDateTime, // YYYY-MM-DD HH:MM:SS
+            'end_time'    => $endDateTime,   // YYYY-MM-DD HH:MM:SS
             'status'      => 'pending'
         ];
     
+        // 予約の重複チェック
         if ($reservationModel->isOverlapping($data['resource_id'], $data['start_time'], $data['end_time'])) {
             return redirect()->back()->withInput()->with('error', 'この時間帯にはすでに予約が入っています。');
         }
     
+        // データを保存
         if (!$reservationModel->insert($data)) {
             return redirect()->back()->withInput()->with('errors', $reservationModel->errors());
         }
     
         return redirect()->route('reservation.index')->with('message', '予約を追加しました。');
     }
-    
 
     public function delete($id)
     {
