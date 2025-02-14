@@ -84,7 +84,9 @@
         const confirmPassword = document.getElementById("new_password_confirm").value;
         const errorDiv = document.getElementById("password-error");
 
-        if (newPassword !== confirmPassword && confirmPassword !== "") {
+        if (confirmPassword === "") {
+            errorDiv.style.display = "none";
+        } else if (newPassword !== confirmPassword) {
             errorDiv.style.display = "block";
         } else {
             errorDiv.style.display = "none";

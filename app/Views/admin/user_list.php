@@ -17,13 +17,7 @@
         </a>
     </div>
 
-    <?php if (session()->getFlashdata('message')): ?>
-        <div class="alert alert-success">
-            <?= session()->getFlashdata('message') ?>
-        </div>
-    <?php endif; ?>
-
-    <table class="table table-striped mt-2">
+    <table class="table table-bordered table-hover mt-2">
         <thead>
             <tr>
                 <th>ID</th>
@@ -37,32 +31,46 @@
         </thead>
         <tbody>
             <?php foreach ($users as $user): ?>
-                <tr>
+                <tr class="<?= $user->deleted_at ? 'text-muted' : '' ?>">
                     <td><?= esc($user->id) ?></td>
                     <td><?= esc($user->username) ?></td>
                     <td><?= esc($user->fullname ?? '-') ?></td>
                     <td>
-                    <?php 
-                    $groups = $user->getGroups() ?? [];
-                    $groupLabel = '一般';
+                        <?php 
+                        $groups = $user->getGroups() ?? [];
+                        $groupLabel = '一般';
 
-                    if (in_array('admin', $groups, true)) {
-                        $groupLabel = '管理者';
-                    } elseif (in_array('guest', $groups, true)) {
-                        $groupLabel = 'ゲスト';
-                    }
-                    
-                    echo esc($groupLabel);
-                    ?>
+                        if (in_array('admin', $groups, true)) {
+                            $groupLabel = '管理者';
+                        } elseif (in_array('guest', $groups, true)) {
+                            $groupLabel = 'ゲスト';
+                        }
+
+                        echo esc($groupLabel);
+                        ?>
                     </td>
-                    <td><?= $user->active ? '有効' : '無効' ?></td>
-                    <td><?= $user->last_active ? $user->last_active->toLocalizedString('yyyy-MM-dd HH:mm:ss') : '未アクティブ' ?></td>
+                    <td>
+                        <?php if ($user->deleted_at): ?>
+                            <span class="badge bg-danger">削除済</span>
+                        <?php else: ?>
+                            <?= $user->active ? '<span class="badge bg-success">有効</span>' : '<span class="badge bg-secondary">無効</span>' ?>
+                        <?php endif; ?>
+                    </td>
+                    <td><?= $user->last_active ? $user->last_active->format('Y-m-d H:i:s') : '未アクティブ' ?></td>
                     <td class="text-nowrap" style="width: 150px;">
                         <div class="btn-group" role="group">
-                            
-                            <?php if ($user->username !== 'admin' && $user->id !== auth()->user()->id): ?>
-                                <a href="<?= site_url('admin/users/edit/' . $user->id) ?>" class="btn btn-sm btn-primary">編集</a>
-                                <a href="<?= site_url('admin/users/delete/' . $user->id) ?>" class="btn btn-sm btn-danger" onclick="return confirm('本当に削除しますか？')">削除</a>
+                            <?php if ($user->deleted_at): ?>
+                                <a href="<?= site_url('admin/users/restore/' . $user->id) ?>" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-arrow-counterclockwise"></i> 復元
+                                </a>
+                            <?php elseif ($user->username !== 'admin' && $user->id !== auth()->user()->id): ?>
+                                <a href="<?= site_url('admin/users/edit/' . $user->id) ?>" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-pencil-square"></i> 編集
+                                </a>
+                                <a href="<?= site_url('admin/users/delete/' . $user->id) ?>" class="btn btn-sm btn-danger" 
+                                    onclick="return confirm('対象を論理削除します。よろしいですか？')">
+                                    <i class="bi bi-trash"></i> 削除
+                                </a>
                             <?php endif; ?>
                         </div>
                     </td>

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controllers\Admin;
+namespace App\Controllers;
 
 use CodeIgniter\I18n\Time;
 use App\Controllers\BaseController;
@@ -12,10 +12,16 @@ class UserController extends BaseController
 
     public function index()
     {
-        $users = model(UserModel::class)->where('deleted_at', null)->findAll();
-
+        $userModel = model(UserModel::class);
+    
+        $users = $userModel
+            ->withDeleted()
+            ->orderBy("CASE WHEN deleted_at IS NULL THEN 0 ELSE 1 END ASC", '', false)
+            ->orderBy("id ASC", '', false)
+            ->findAll();
+    
         return view('admin/user_list', ['users' => $users]);
-    }
+    }     
 
     public function create()
     {
@@ -24,34 +30,32 @@ class UserController extends BaseController
     }
 
     public function store()
-    {
-        $users = model(UserModel::class);
-    
-        $user = new User([
-            'email'    => $this->request->getPost('email'),
-            'username' => $this->request->getPost('username'),
-            'fullname' => $this->request->getPost('fullname'),
-            'password' => $this->request->getPost('password'),
-            'active'   => $this->request->getPost('active'),
-            'last_active' => Time::now(), // 現在の日時を設定
-        ]);
-    
-        // ユーザーを保存
-        $users->save($user);
+{
+    $users = model(UserModel::class);
+    $username = $this->request->getPost('username');
 
-        // 保存したユーザーのIDを取得
-        $insertedId = $users->getInsertID();
+    // すでに登録されているかチェック
+    $existingUser = $users->where('username', $username)->withDeleted()->first();
 
-        // ユーザーをデータベースから再取得
-        $user = $users->findById($insertedId);
-    
-        // 必要に応じてユーザーにグループを割り当てる
-        $role = $this->request->getPost('role');
-        $user->addGroup($role);
-    
-        return redirect()->route('admin.users.index')->with('message', 'ユーザーが正常に作成されました。');
+    if ($existingUser) {
+        // すでに存在する場合はエラー
+        return redirect()->route('admin.register')->withInput()->with('error', 'そのユーザー名はすでに使用されています。');
     }
-    
+
+    // 新規登録
+    $user = new User([
+        'username' => $username,
+        'email'    => $this->request->getPost('email'),
+        'fullname' => $this->request->getPost('fullname'),
+        'password' => $this->request->getPost('password'),
+        'active'   => $this->request->getPost('active'),
+        'last_active' => Time::now(),
+    ]);
+
+    $users->save($user);
+
+    return redirect()->route('admin.users.index')->with('message', 'ユーザーが登録されました。');
+}
 
     public function edit($id)
     {

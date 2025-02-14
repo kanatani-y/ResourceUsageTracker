@@ -14,19 +14,34 @@ $routes->get('/', 'Home::index', ['as' => 'home']);
 service('auth')->routes($routes);
 
 $routes->group('admin', ['filter' => 'group:admin'], function ($routes) {
-    $routes->get('users', 'Admin\UserController::index', ['as' => 'admin.users.index']);
-    $routes->get('users/edit/(:num)', 'Admin\UserController::edit/$1', ['as' => 'admin.users.edit']);
-    $routes->post('users/update/(:num)', 'Admin\UserController::update/$1', ['as' => 'admin.users.update']);
-    $routes->get('register', 'Admin\UserController::create', ['as' => 'admin.register']);
-    $routes->post('register', 'Admin\UserController::store');
-    $routes->get('users/delete/(:num)', 'Admin\UserController::delete/$1', ['as' => 'admin.users.delete']);
+    $routes->get('users', 'UserController::index', ['as' => 'admin.users.index']);
+    $routes->get('users/edit/(:num)', 'UserController::edit/$1', ['as' => 'admin.users.edit']);
+    $routes->post('users/update/(:num)', 'UserController::update/$1', ['as' => 'admin.users.update']);
+    $routes->get('register', 'UserController::create', ['as' => 'admin.register']);
+    $routes->post('register', 'UserController::store');
+    $routes->get('users/delete/(:num)', 'UserController::delete/$1', ['as' => 'admin.users.delete']);
 });
 
 $routes->group('resource', ['filter' => 'group:admin'], function ($routes) {
-    $routes->get('/', 'Resource\ResourceController::index', ['as' => 'resource.index']);
-    $routes->get('create', 'Resource\ResourceController::create', ['as' => 'resource.create']);
-    $routes->post('store', 'Resource\ResourceController::store', ['as' => 'resource.store']);
-    $routes->get('edit/(:num)', 'Resource\ResourceController::edit/$1', ['as' => 'resource.edit']);
-    $routes->post('update/(:num)', 'Resource\ResourceController::update/$1', ['as' => 'resource.update']);
-    $routes->get('delete/(:num)', 'Resource\ResourceController::delete/$1', ['as' => 'resource.delete']);
+    $routes->get('/', 'ResourceController::index', ['as' => 'resource.index']);
+    $routes->get('create', 'ResourceController::create', ['as' => 'resource.create']);
+    $routes->post('store', 'ResourceController::store', ['as' => 'resource.store']);
+    $routes->get('show/(:num)', 'ResourceController::show/$1', ['as' => 'resource.show']);
+    $routes->get('edit/(:num)', 'ResourceController::edit/$1', ['as' => 'resource.edit']);
+    $routes->post('update/(:num)', 'ResourceController::update/$1', ['as' => 'resource.update']);
+    $routes->get('delete/(:num)', 'ResourceController::delete/$1', ['as' => 'resource.delete']);
+});
+
+$routes->group('account', function ($routes) {
+    $routes->get('/', 'AccountController::index', ['as' => 'account.index']); // 全アカウント一覧
+    $routes->get('/(:num)', 'AccountController::index/$1', ['as' => 'account.index_with_id']); // 特定のリソース
+    $routes->get('create/(:num)', 'AccountController::create/$1', ['as' => 'account.create']);
+    $routes->get('create', 'AccountController::create', ['as' => 'account.create_no_resource']);
+    $routes->post('store', 'AccountController::store', ['as' => 'account.store']);
+    $routes->post('delete/(:num)', 'AccountController::delete/$1', ['as' => 'account.delete']);
+});
+
+$routes->group('profile', function ($routes) {
+    $routes->get('settings', 'ProfileController::settings', ['as' => 'profile.settings']);
+    $routes->post('update', 'ProfileController::update', ['as' => 'profile.update']);
 });
