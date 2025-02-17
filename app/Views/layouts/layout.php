@@ -41,7 +41,7 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('resource.index') ?>">
+                                    <a class="dropdown-item" href="<?= route_to('reservation.schedule') ?>">
                                         <i class="bi bi-list-check"></i> 予約状況確認
                                     </a>
                                 </li>

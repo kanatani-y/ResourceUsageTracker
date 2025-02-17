@@ -41,7 +41,7 @@ class AccountModel extends Model
             'label' => 'パスワード',
         ],
         'connection_type' => [
-            'rules' => 'required|in_list[SSH,RDP,FTP,その他]',
+            'rules' => 'required|in_list[SSH,RDP,FTP,OTH]',
             'label' => '接続方式',
             'errors' => [
                 'in_list' => '接続方式は「SSH, RDP, FTP, その他」のいずれかを選択してください。',

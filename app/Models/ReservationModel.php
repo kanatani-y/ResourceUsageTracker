@@ -31,11 +31,11 @@ class ReservationModel extends Model
         $this->where('resource_id', $resource_id);
         $this->where('start_time <', $end_time);
         $this->where('end_time >', $start_time);
-
+    
         if ($exclude_id) {
             $this->where('id !=', $exclude_id);
         }
-
+    
         return $this->countAllResults() > 0;
     }
 }

@@ -61,28 +61,51 @@ class AccountController extends BaseController
     {
         $accountModel = new AccountModel();
     
-        // **バリデーションを適用**
+        // **バリデーション**
         if (!$accountModel->validate($this->request->getPost())) {
             return redirect()->back()->withInput()->with('errors', $accountModel->errors());
         }
     
-        // **データ準備（パスワードのエンコードは Model で行う）**
+        // **パスワードをエンコードして格納**
+        $password = $this->request->getPost('password');
+        $encodedPassword = !empty($password) ? base64url_encode($password) : null;
+    
         $data = [
             'resource_id'     => $this->request->getPost('resource_id'),
             'username'        => $this->request->getPost('username'),
-            'password'        => $this->request->getPost('password'), // そのまま渡す（Model でエンコード）
+            'password'        => $encodedPassword, // **明示的にエンコード**
             'connection_type' => $this->request->getPost('connection_type'),
-            'port'            => $this->request->getPost('port') !== '' ? $this->request->getPost('port') : -1, 
+            'port'            => $this->request->getPost('port') !== '' ? $this->request->getPost('port') : -1,
             'description'     => $this->request->getPost('description'),
         ];
     
-        // **データ保存**
         $accountModel->insert($data);
     
         return redirect()->to(route_to('account.index', $data['resource_id']))
                         ->with('message', 'アカウントが登録されました。');
-    }    
+    }
     
+    public function edit($id)
+    {
+        $accountModel = new AccountModel();
+        $resourceModel = new ResourceModel();
+    
+        $account = $accountModel->find($id);
+        if (!$account) {
+            return redirect()->route('account.index')->with('error', 'アカウントが見つかりません。');
+        }
+    
+        $resources = $resourceModel->orderBy('name', 'ASC')->findAll();
+        $selectedResource = $resourceModel->find($account['resource_id']);
+    
+        return view('account/account_form', [
+            'account' => $account,
+            'resources' => $resources, // 修正: これを追加
+            'selectedResource' => $selectedResource
+        ]);
+    }
+    
+
     public function update($id)
     {
         $accountModel = new AccountModel();
@@ -110,7 +133,6 @@ class AccountController extends BaseController
         return redirect()->to(route_to('account.index', $account['resource_id']))
                         ->with('message', 'アカウントが更新されました。');
     }
-    
 
     public function delete($id)
     {
