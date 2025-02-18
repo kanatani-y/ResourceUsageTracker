@@ -43,37 +43,42 @@ class ReservationController extends BaseController
     {
         $resourceModel = new ResourceModel();
         $accountModel = new AccountModel();
+        $reservationModel = new ReservationModel();
     
-        // リソース情報を取得
+        // リソース一覧取得
         $resources = $resourceModel->select('id, name, hostname')->orderBy('name', 'ASC')->findAll();
     
-        // リソースごとに紐づくアカウント一覧を取得
+        // 各リソースのアカウント一覧取得
         $accounts = [];
         foreach ($resources as $resource) {
             $accounts[$resource['id']] = $accountModel->where('resource_id', $resource['id'])->findAll();
         }
     
+        // **選択リソースの予約状況を取得**
+        $reservations = [];
+        $selectedDate = date('Y-m-d');
+        if ($resource_id) {
+            $reservations = $reservationModel
+                ->select('reservations.*, users.fullname AS user_name')
+                ->join('users', 'users.id = reservations.user_id')
+                ->where('resource_id', $resource_id)
+                ->where('start_time >=', "$selectedDate 00:00:00")
+                ->orderBy('start_time', 'ASC')
+                ->findAll();
+        }
+    
         return view('reservation/reservation_form', [
-            'resource_id' => $resource_id,
-            'resources'   => $resources,
-            'accounts'    => $accounts,
+            'resource_id'  => $resource_id,
+            'resources'    => $resources,
+            'accounts'     => $accounts,
+            'reservations' => $reservations,
+            'selectedDate' => $selectedDate,
         ]);
     }
 
     public function store()
     {
         $reservationModel = new ReservationModel();
-    
-        // **バリデーション**
-        if (!$this->validate([
-            'resource_id'      => 'required|integer',
-            'account_id'       => 'required|integer',
-            'reservation_date' => 'required|valid_date',
-            'start_time'       => 'required',
-            'end_time'         => 'required',
-        ])) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
     
         // **送信されたデータを結合**
         $date = $this->request->getPost('reservation_date'); // YYYY-MM-DD
@@ -82,7 +87,6 @@ class ReservationController extends BaseController
     
         $startDateTime = "$date $startTime:00"; // YYYY-MM-DD HH:MM:00
         $endDateTime = "$date $endTime:00";     // YYYY-MM-DD HH:MM:00
-    
         // **データ準備**
         $data = [
             'resource_id' => $this->request->getPost('resource_id'),
@@ -90,14 +94,14 @@ class ReservationController extends BaseController
             'user_id'     => auth()->user()->id,
             'start_time'  => $startDateTime,
             'end_time'    => $endDateTime,
-            'status'      => 'pending'
+            'purpose'     => $this->request->getPost('purpose'),
         ];
-    
+        
         // **予約の重複チェック**
-        if ($reservationModel->isOverlapping($data['resource_id'], $data['start_time'], $data['end_time'])) {
+        if ($reservationModel->isOverlapping($data['resource_id'], $data['account_id'], $data['start_time'], $data['end_time'])) {
             return redirect()->back()->withInput()->with('error', 'この時間帯にはすでに予約が入っています。');
         }
-    
+
         // **データ保存**
         $reservationModel->insert($data);
     
@@ -147,4 +151,109 @@ class ReservationController extends BaseController
             'selectedDate' => $selectedDate,
         ]);
     }
+
+    public function edit($id)
+    {
+        $reservationModel = new ReservationModel();
+        $resourceModel = new ResourceModel();
+        $accountModel = new AccountModel();
+    
+        // 予約情報を取得
+        $reservation = $reservationModel->find($id);
+        if (!$reservation) {
+            return redirect()->route('reservation.schedule')->with('error', '指定された予約が見つかりませんでした。');
+        }
+    
+        // 利用可能なリソース（編集時は変更不可）
+        $resources = $resourceModel->findAll();
+        $accounts = $accountModel->where('resource_id', $reservation['resource_id'])->findAll();
+    
+        // **予約状況の取得（予約日以降）**
+        $selectedDate = date('Y-m-d');
+        $reservations = $reservationModel
+            ->select('reservations.*, users.fullname AS user_name')
+            ->join('users', 'users.id = reservations.user_id')
+            ->where('resource_id', $reservation['resource_id'])
+            ->where('start_time >=', "$selectedDate 00:00:00")
+            ->orderBy('start_time', 'ASC')
+            ->findAll();
+    
+        return view('reservation/reservation_form', [
+            'reservation'  => $reservation,
+            'resource_id'  => $reservation['resource_id'],
+            'account_id'   => $reservation['account_id'],
+            'resources'    => $resources,
+            'accounts'     => $accounts,
+            'reservations' => $reservations,
+            'selectedDate' => $selectedDate
+        ]);
+    }
+
+    public function update($id)
+    {
+        $reservationModel = new ReservationModel();
+
+        // 予約情報を取得
+        $reservation = $reservationModel->find($id);
+        if (!$reservation) {
+            return redirect()->route('reservation.schedule')->with('error', '指定された予約が見つかりませんでした。');
+        }
+
+        // **入力データを取得**
+        $date = $this->request->getPost('reservation_date'); // YYYY-MM-DD
+        $startTime = $this->request->getPost('start_time');  // HH:MM
+        $endTime = $this->request->getPost('end_time');      // HH:MM
+        $purpose = $this->request->getPost('purpose');       // 使用目的
+
+        // **時間のフォーマットを変換**
+        $startDateTime = "$date $startTime:00";
+        $endDateTime = "$date $endTime:00";
+
+        // **更新データの準備**
+        $data = [
+            'resource_id' => $reservation['resource_id'],
+            'account_id'  => $this->request->getPost('account_id') ?? 0,
+            'start_time'  => $startDateTime,
+            'end_time'    => $endDateTime,
+            'purpose'     => $this->request->getPost('purpose'),
+        ];
+    
+        // **予約の重複チェック**
+        if ($reservationModel->isOverlapping($data['resource_id'], $data['account_id'], $data['start_time'], $data['end_time'], $id)) {
+            return redirect()->back()->withInput()->with('error', 'この時間帯にはすでに予約が入っています。');
+        }
+
+        // **予約情報の更新**
+        $reservationModel->update($id, $data);
+
+        return redirect()->to(route_to('reservation.schedule', ['date' => $date]))
+                        ->with('message', '予約が更新されました。');
+    }
+
+    public function getReservations()
+    {
+        $reservationModel = new ReservationModel();
+    
+        $selectedDate = $this->request->getGet('date') ?? date('Y-m-d');
+        $resourceId = $this->request->getGet('resource_id');
+        $accountId = $this->request->getGet('account_id');
+    
+        if (!$resourceId || !$accountId) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Invalid Parameters']);
+        }
+    
+        // 条件に一致する予約を取得
+        $reservations = $reservationModel
+            ->select('reservations.*, users.fullname AS user_name')
+            ->join('users', 'users.id = reservations.user_id', 'left')
+            ->where('start_time >=', "$selectedDate 00:00:00")
+            ->where('resource_id', $resourceId)
+            ->where('account_id', $accountId)
+            ->orderBy('start_time', 'ASC')
+            ->findAll();
+    
+        return $this->response->setJSON($reservations);
+    }
+    
+
 }

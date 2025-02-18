@@ -9,7 +9,7 @@ use CodeIgniter\Router\RouteCollection;
 
 $routes->get('login', 'AuthController::login', ['as' => 'login']);
 $routes->post('logout', 'AuthController::logout', ['as' => 'logout']);
-$routes->get('/', 'Home::index', ['as' => 'home']);
+$routes->get('/', 'ReservationController::schedule');
 
 service('auth')->routes($routes);
 
@@ -57,5 +57,6 @@ $routes->group('reservation', function ($routes) {
     $routes->get('edit/(:num)', 'ReservationController::edit/$1', ['as' => 'reservation.edit']);
     $routes->post('update/(:num)', 'ReservationController::update/$1', ['as' => 'reservation.update']);
     $routes->post('delete/(:num)', 'ReservationController::delete/$1', ['as' => 'reservation.delete']);
+    $routes->get('getReservations', 'ReservationController::getReservations');
 });
 

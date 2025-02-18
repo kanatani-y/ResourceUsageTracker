@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use CodeIgniter\I18n\Time;
 use App\Controllers\BaseController;
-use CodeIgniter\Shield\Entities\User;
+use CodeIgniter\Shield\Models\UserIdentityModel;
 use App\Models\UserModel;
 
 class UserController extends BaseController
@@ -30,32 +30,51 @@ class UserController extends BaseController
     }
 
     public function store()
-{
-    $users = model(UserModel::class);
-    $username = $this->request->getPost('username');
-
-    // すでに登録されているかチェック
-    $existingUser = $users->where('username', $username)->withDeleted()->first();
-
-    if ($existingUser) {
-        // すでに存在する場合はエラー
-        return redirect()->route('admin.register')->withInput()->with('error', 'そのユーザー名はすでに使用されています。');
+    {
+        $users = model(UserModel::class);
+        $userIdentityModel = new UserIdentityModel(); // auth_identities の操作用
+        $username = $this->request->getPost('username');
+    
+        // **既存ユーザーのチェック**
+        $existingUser = $users->where('username', $username)->withDeleted()->first();
+        if ($existingUser) {
+            return redirect()->route('admin.register')->withInput()->with('error', 'そのユーザー名はすでに使用されています。');
+        }
+    
+        // **パスワードのハッシュ化**
+        $password = $this->request->getPost('password');
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    
+        // **新規ユーザー作成**
+        $userData = [
+            'username' => $username,
+            'email'    => $this->request->getPost('email'),
+            'fullname' => $this->request->getPost('fullname'),
+            'active'   => $this->request->getPost('active'),
+            'last_active' => Time::now(),
+        ];
+    
+        // **ユーザーを保存**
+        $users->skipValidation(true)->save($userData);
+        $userId = $users->getInsertID(); // 保存後の `user_id` を取得
+    
+        if (!$userId) {
+            return redirect()->route('admin.register')->withInput()->with('error', 'ユーザー登録に失敗しました。');
+        }
+    
+        // **`auth_identities` に `password_hash` を登録**
+        $userIdentityModel->insert([
+            'user_id'  => $userId,
+            'type'     => 'email_password',
+            'name'     => $this->request->getPost('email'),
+            'secret'   => $this->request->getPost('email'), // `email` を `secret` に保存
+            'secret2'  => $hashedPassword, // `password_hash` を `secret2` に保存
+            'created_at' => Time::now(),
+            'updated_at' => Time::now(),
+        ]);
+    
+        return redirect()->route('admin.users.index')->with('message', 'ユーザーが登録されました。');
     }
-
-    // 新規登録
-    $user = new User([
-        'username' => $username,
-        'email'    => $this->request->getPost('email'),
-        'fullname' => $this->request->getPost('fullname'),
-        'password' => $this->request->getPost('password'),
-        'active'   => $this->request->getPost('active'),
-        'last_active' => Time::now(),
-    ]);
-
-    $users->save($user);
-
-    return redirect()->route('admin.users.index')->with('message', 'ユーザーが登録されました。');
-}
 
     public function edit($id)
     {

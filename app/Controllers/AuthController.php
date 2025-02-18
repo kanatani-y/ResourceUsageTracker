@@ -26,7 +26,7 @@ class AuthController extends Controller
                 return redirect()->route('login')->withInput()->with('error', $result->reason());
             }
     
-            return redirect()->route('home');
+            return redirect()->route('reservation.schedule');
         }
     
         return view('Auth/login');

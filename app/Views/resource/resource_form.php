@@ -1,6 +1,6 @@
 <?= $this->extend('layouts/layout') ?>
 
-<?= $this->section('title') ?>新規予約<?= $this->endSection() ?>
+<?= $this->section('title') ?><?= isset($reservation) ? '予約編集' : '新規予約' ?><?= $this->endSection() ?>
 
 <?= $this->section('main') ?>
 <div class="container">
@@ -9,12 +9,16 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
-                        <i class="bi bi-calendar-plus"></i> 新規予約
+                        <i class="bi bi-calendar-<?= isset($reservation) ? 'check' : 'plus' ?>"></i>
+                        <?= isset($reservation) ? '予約編集' : '新規予約' ?>
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="<?= route_to('reservation.store') ?>" method="post">
+                    <form action="<?= isset($reservation) ? route_to('reservation.update', $reservation['id']) : route_to('reservation.store') ?>" method="post">
                         <?= csrf_field() ?>
+                        <?php if (isset($reservation)): ?>
+                            <input type="hidden" name="_method" value="POST">
+                        <?php endif; ?>
 
                         <div class="row">
                             <!-- リソース選択 -->
@@ -23,7 +27,8 @@
                                 <select name="resource_id" id="resource_id" class="form-select" required>
                                     <option value="">リソースを選択</option>
                                     <?php foreach ($resources as $res): ?>
-                                        <option value="<?= esc($res['id']) ?>" <?= ($resource_id == $res['id']) ? 'selected' : '' ?>>
+                                        <option value="<?= esc($res['id']) ?>"
+                                            <?= (isset($reservation) && $reservation['resource_id'] == $res['id']) ? 'selected' : '' ?>>
                                             <?= esc($res['name']) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -43,7 +48,8 @@
                             <!-- 予約日 -->
                             <div class="col-md-6 mb-3">
                                 <label for="date" class="form-label">予約日</label>
-                                <input type="date" class="form-control" id="date" name="date" required>
+                                <input type="date" class="form-control" id="date" name="date" required
+                                    value="<?= isset($reservation) ? esc(date('Y-m-d', strtotime($reservation['start_time']))) : '' ?>">
                             </div>
 
                             <!-- 予約時間 -->
@@ -51,19 +57,35 @@
                                 <label for="time_slot" class="form-label">時間帯</label>
                                 <select name="time_slot" id="time_slot" class="form-select" required>
                                     <option value="">時間帯を選択</option>
-                                    <option value="9:00-10:00">9:00 - 10:00</option>
-                                    <option value="10:00-11:00">10:00 - 11:00</option>
-                                    <option value="11:00-12:00">11:00 - 12:00</option>
-                                    <option value="13:00-14:00">13:00 - 14:00</option>
-                                    <option value="14:00-15:00">14:00 - 15:00</option>
-                                    <option value="15:00-16:00">15:00 - 16:00</option>
-                                    <option value="16:00-17:00">16:00 - 17:00</option>
-                                    <option value="17:00-18:00">17:00 - 18:00</option>
-                                    <option value="morning">午前（9:00 - 12:00）</option>
-                                    <option value="afternoon">午後（13:00 - 18:00）</option>
-                                    <option value="full_day">終日（9:00 - 18:00）</option>
+                                    <?php
+                                    $timeSlots = [
+                                        "9:00-10:00" => "9:00 - 10:00",
+                                        "10:00-11:00" => "10:00 - 11:00",
+                                        "11:00-12:00" => "11:00 - 12:00",
+                                        "13:00-14:00" => "13:00 - 14:00",
+                                        "14:00-15:00" => "14:00 - 15:00",
+                                        "15:00-16:00" => "15:00 - 16:00",
+                                        "16:00-17:00" => "16:00 - 17:00",
+                                        "17:00-18:00" => "17:00 - 18:00",
+                                        "morning" => "午前（9:00 - 12:00）",
+                                        "afternoon" => "午後（13:00 - 18:00）",
+                                        "full_day" => "終日（9:00 - 18:00）"
+                                    ];
+                                    foreach ($timeSlots as $key => $label):
+                                    ?>
+                                        <option value="<?= $key ?>"
+                                            <?= (isset($reservation) && $reservation['time_slot'] == $key) ? 'selected' : '' ?>>
+                                            <?= $label ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
+                        </div>
+
+                        <!-- 使用目的 -->
+                        <div class="mb-3">
+                            <label for="purpose" class="form-label">使用目的</label>
+                            <textarea class="form-control" id="purpose" name="purpose" rows="3"><?= old('purpose', $reservation['purpose'] ?? '') ?></textarea>
                         </div>
 
                         <!-- ボタン -->
@@ -72,7 +94,8 @@
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> 予約する
+                                <i class="bi bi-save"></i>
+                                <?= isset($reservation) ? '予約を更新' : '予約する' ?>
                             </button>
                         </div>
                     </form>
@@ -98,6 +121,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     option.textContent = account.username;
                     accountSelect.appendChild(option);
                 });
+
+                // 既存予約のアカウントをセット（編集時）
+                <?php if (isset($reservation)): ?>
+                    accountSelect.value = "<?= esc($reservation['account_id']) ?>";
+                <?php endif; ?>
             })
             .catch(error => console.error("アカウントの取得に失敗しました:", error));
     }
@@ -110,6 +138,11 @@ document.addEventListener("DOMContentLoaded", function () {
             accountSelect.innerHTML = '<option value="">リソースを選択してください</option>';
         }
     });
+
+    // 編集時、リソースが選択されていたらアカウントリストを更新
+    <?php if (isset($reservation)): ?>
+        fetchAccounts("<?= esc($reservation['resource_id']) ?>");
+    <?php endif; ?>
 });
 </script>
 

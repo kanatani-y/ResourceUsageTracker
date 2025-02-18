@@ -72,7 +72,6 @@
                                 </li>
                             </ul>
                         </li>
-                        <?php endif; ?>
 
                         <!-- アカウント管理 -->
                         <li class="nav-item dropdown">
@@ -88,8 +87,6 @@
                             </ul>
                         </li>
 
-                        <!-- ユーザー管理 (管理者のみ) -->
-                        <?php if ($authUser->inGroup('admin')): ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-people"></i> ユーザー管理
@@ -138,19 +135,25 @@
     </nav>
 
     <main role="main" class="container mt-3">
-        <?php if (session()->getFlashdata('message')) : ?>
-            <div class="alert alert-success">
-                <?= esc(session()->getFlashdata('message')) ?>
-            </div>
-        <?php endif; ?>
+    <?php if (session()->getFlashdata('message')) : ?>
+        <div class="alert alert-success">
+            <?= esc(session()->getFlashdata('message')) ?>
+        </div>
+    <?php endif; ?>
 
-        <?php if (session()->getFlashdata('errors')) : ?>
-            <div class="alert alert-danger">
-                <?php foreach (session()->getFlashdata('errors') as $error) : ?>
-                    <?= esc($error) ?><br>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+    <?php if (session()->getFlashdata('error')) : ?>
+        <div class="alert alert-danger">
+            <?= esc(session()->getFlashdata('error')) ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('errors')) : ?>
+        <div class="alert alert-danger">
+            <?php foreach (session()->getFlashdata('errors') as $error) : ?>
+                <?= esc($error) ?><br>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 
         <?= $this->renderSection('main') ?>
     </main>

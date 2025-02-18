@@ -18,25 +18,36 @@
 
                         <div class="mb-3">
                             <label for="resource_id" class="form-label">リソース</label>
-                            <select name="resource_id" id="resource_id" class="form-select" required>
+                            <select name="resource_id" id="resource_id" class="form-select" required <?= isset($reservation) ? 'disabled' : '' ?>>
                                 <option value="">リソースを選択</option>
                                 <?php foreach ($resources as $res): ?>
-                                    <option value="<?= esc($res['id']) ?>" <?= (isset($resource_id) && $resource_id == $res['id']) ? 'selected' : '' ?>>
+                                    <option value="<?= esc($res['id']) ?>"
+                                        <?= (isset($reservation) && $reservation['resource_id'] == $res['id']) ? 'selected' : '' ?>>
                                         <?= esc($res['name']) ?> (<?= esc($res['hostname'] ?? '') ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+
+                            <!-- リソース変更不可のため、編集時は hidden input で `resource_id` を送信 -->
+                            <?php if (isset($reservation)): ?>
+                                <input type="hidden" name="resource_id" value="<?= esc($reservation['resource_id']) ?>">
+                            <?php endif; ?>
                         </div>
 
                         <!-- アカウント選択 -->
                         <div class="mb-3">
                             <label for="account_id" class="form-label">アカウント</label>
-                            <select name="account_id" id="account_id" class="form-select" required <?= (isset($resource_id) && !empty($accounts[$resource_id])) ? '' : 'disabled' ?>>
+                            <select name="account_id" id="account_id" class="form-select" required>
                                 <option value="">アカウントを選択</option>
-                                <?php if (isset($resource_id) && isset($accounts[$resource_id]) && !empty($accounts[$resource_id])): ?>
-                                    <?php foreach ($accounts[$resource_id] as $account): ?>
-                                        <option value="<?= esc($account['id']) ?>"><?= esc($account['username']) ?></option>
+                                <?php if (!empty($accounts)): ?>
+                                    <?php foreach ($accounts as $account): ?>
+                                        <option value="<?= esc($account['id'] ?? '') ?>"
+                                            <?= (isset($reservation) && isset($reservation['account_id']) && $reservation['account_id'] == $account['id']) ? 'selected' : '' ?>>
+                                            <?= esc($account['username'] ?? 'なし') ?>
+                                        </option>
                                     <?php endforeach; ?>
+                                <?php else: ?>
+                                    <option value="" disabled>選択可能なアカウントがありません</option>
                                 <?php endif; ?>
                             </select>
                         </div>
@@ -65,7 +76,12 @@
 
                         <div class="mb-3">
                             <label for="reservation_date" class="form-label">予約日</label>
-                            <input type="date" class="form-control" id="reservation_date" name="reservation_date" value="<?= $today ?>" required>
+                            <input type="date" class="form-control" id="reservation_date" name="reservation_date"
+                                value="<?= old('reservation_date', $reservation['reservation_date'] ?? date('Y-m-d')) ?>"
+                                min="<?= date('Y-m-d') ?>" required>
+                            <div id="dateError" class="text-danger mt-1" style="display: none;">
+                                過去の日付は選択できません。
+                            </div>
                         </div>
 
                         <div class="row">
@@ -90,6 +106,14 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <!-- 使用目的 -->
+                            <div class="col-md-12 mb-3">
+                                <label for="purpose" class="form-label">使用目的</label>
+                                <textarea class="form-control" id="purpose" name="purpose" rows="3"><?= old('purpose', $reservation['purpose'] ?? '') ?></textarea>
+                            </div>
+                        </div>
+
                         <!-- 予約ボタン -->
                         <div class="d-flex justify-content-between">
                             <a href="<?= site_url('reservation') ?>" class="btn btn-secondary">
@@ -103,12 +127,104 @@
                 </div>
             </div>
         </div>
+        <!-- 右側に予約状況を表示 -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> 予約状況
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush reservation-timeline">
+                        <li class="list-group-item text-muted text-center">予約情報を取得中...</li>
+                        <?php 
+                        $previousDate = null;
+                        foreach ($reservations as $res):
+                            // 予約日・時間を取得
+                            $reservationDate = date('Y-m-d', strtotime($res['start_time']));
+                            $startTime = date('H:i', strtotime($res['start_time']));
+                            $endTime = date('H:i', strtotime($res['end_time']));
+
+                            // 選択された予約日以降、かつリソース＋アカウントが一致するもののみ表示
+                            if ($reservationDate >= $selectedDate 
+                                && isset($resource_id) && $res['resource_id'] == $resource_id 
+                                && isset($account_id) && $res['account_id'] == $account_id):
+                        ?>
+
+                        <li class="list-group-item">
+                            <span class="badge bg-primary"><?= esc($reservationDate) ?></span>
+                            <span class="reservation-time me-2"><?= $startTime ?> - <?= $endTime ?></span>
+                            <p class="mb-1"><strong><?= esc($res['user_name'] ?? '不明') ?></strong></p>
+                            <small class="text-muted"><?= esc($res['purpose'] ?? 'なし') ?></small>
+                        </li>
+                        <?php endif; endforeach; ?>
+
+                        <!-- 一致する予約がない場合 -->
+                        <?php if ($previousDate === null): ?>
+                            <li class="list-group-item text-muted text-center">対象の予約はありません</li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <script>
     const accounts = <?= json_encode($accounts, JSON_HEX_TAG) ?>;
     const resourceSelect = document.getElementById('resource_id');
     const accountSelect = document.getElementById('account_id');
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const reservationDateInput = document.getElementById("reservation_date");
+        const resourceSelect = document.getElementById("resource_id");
+        const accountSelect = document.getElementById("account_id");
+        const reservationList = document.querySelector(".reservation-timeline");
+
+        function fetchReservations() {
+            const selectedDate = reservationDateInput.value;
+            const resourceId = resourceSelect.value;
+            const accountId = accountSelect.value;
+
+            if (!selectedDate || !resourceId || !accountId) return;
+
+            fetch(`<?= site_url('reservation/getReservations') ?>?date=${selectedDate}&resource_id=${resourceId}&account_id=${accountId}`)
+                .then(response => response.json())
+                .then(data => {
+                    reservationList.innerHTML = ""; // 一度クリア
+
+                    if (data.length > 0) {
+                        let lastDate = "";
+                        data.forEach(res => {
+                            let reservationDate = res.start_time.split(" ")[0];
+                            let startTime = res.start_time.split(" ")[1].slice(0, 5);
+                            let endTime = res.end_time.split(" ")[1].slice(0, 5);
+
+                            if (lastDate !== reservationDate) {
+                                reservationList.innerHTML += `<li class="list-group-item bg-light text-center fw-bold">${reservationDate}</li>`;
+                                lastDate = reservationDate;
+                            }
+
+                            reservationList.innerHTML += `
+                                <li class="list-group-item">
+                                    <span class="badge bg-primary">${startTime} - ${endTime}</span>
+                                    <p class="mb-1"><strong>${res.user_name ?? '不明'}</strong></p>
+                                    <small class="text-muted">${res.purpose ?? 'なし'}</small>
+                                </li>
+                            `;
+                        });
+                    } else {
+                        reservationList.innerHTML = '<li class="list-group-item text-muted text-center">対象の予約はありません</li>';
+                    }
+                })
+                .catch(error => console.error("予約情報の取得に失敗しました:", error));
+        }
+
+        // 予約日・リソース・アカウントが変更されたら、予約状況を更新
+        reservationDateInput.addEventListener("change", fetchReservations);
+        resourceSelect.addEventListener("change", fetchReservations);
+        accountSelect.addEventListener("change", fetchReservations);
+    });
 
     resourceSelect.addEventListener('change', function() {
         const resourceId = this.value;
@@ -145,4 +261,23 @@
         endTimeSelect.value = newEndTime;
     });
 </script>
+<style>
+.reservation-timeline .list-group-item {
+    border-left: 4px solid #007bff;
+    padding: 10px 15px;
+    margin-bottom: 5px;
+}
+.reservation-timeline .badge {
+    font-size: 14px;
+    padding: 5px 10px;
+}
+.reservation-timeline .reservation-time {
+    font-weight: bold;
+    color: #333;
+    min-width: 90px;
+    text-align: center;
+    display: inline-block;
+}
+
+</style>
 <?= $this->endSection() ?>
