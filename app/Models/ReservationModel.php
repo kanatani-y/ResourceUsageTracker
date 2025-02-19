@@ -18,7 +18,7 @@ class ReservationModel extends Model
             'label' => 'リソース',
         ],
         'account_id' => [
-            'rules' => 'required|integer',
+            'rules' => 'permit_empty|integer',
             'label' => 'アカウント',
         ],
         'user_id' => [

@@ -49,14 +49,21 @@ $routes->group('profile', function ($routes) {
 });
 
 $routes->group('reservation', function ($routes) {
-    $routes->get('/', 'ReservationController::index', ['as' => 'reservation.index']);
+    $routes->get('/', 'ReservationController::schedule', ['as' => 'reservation.index']);
     $routes->get('date/(:segment)?', 'ReservationController::index/$1', ['as' => 'reservation.by_date']);
     $routes->get('schedule', 'ReservationController::schedule', ['as' => 'reservation.schedule']);
+
+    // 通常の `create` ルート（パラメータなし）
     $routes->get('create', 'ReservationController::create', ['as' => 'reservation.create']);
+
+    // `create` ルート（パラメータあり: `resource_id`, `account_id`, `time`）
+    $routes->get('create/(:num)/(:num)/(:segment)', 'ReservationController::create/$1/$2/$3', ['as' => 'reservation.create.with_params']);
+
     $routes->post('store', 'ReservationController::store', ['as' => 'reservation.store']);
     $routes->get('edit/(:num)', 'ReservationController::edit/$1', ['as' => 'reservation.edit']);
     $routes->post('update/(:num)', 'ReservationController::update/$1', ['as' => 'reservation.update']);
     $routes->post('delete/(:num)', 'ReservationController::delete/$1', ['as' => 'reservation.delete']);
     $routes->get('getReservations', 'ReservationController::getReservations');
 });
+
 

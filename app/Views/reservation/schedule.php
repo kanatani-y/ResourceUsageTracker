@@ -7,47 +7,50 @@
     <h3 class="mb-3">予約スケジュール（<?= esc($selectedDate) ?>）</h3>
 
     <!-- 日付選択 -->
-    <form method="get" class="mb-3">
-        <label for="date" class="form-label">日付選択:</label>
-        <input type="date" name="date" id="date" class="form-control d-inline-block w-auto" value="<?= esc($selectedDate) ?>">
+    <form method="get" class="mb-3 d-flex align-items-center">
+        <label for="date" class="form-label me-2">日付選択:</label>
+        <input type="date" name="date" id="date" class="form-control w-auto me-2" value="<?= esc($selectedDate) ?>">
         <button type="submit" class="btn btn-primary">表示</button>
     </form>
 
-    <table class="table table-bordered text-center align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>リソース</th>
-                <th>アカウント</th>
-                <?php for ($hour = 9; $hour <= 18; $hour++): ?>
-                    <th><?= $hour ?>:00</th>
-                <?php endfor; ?>
-            </tr>
-        </thead>
-        
-        <tbody>
+    <!-- テーブルをスクロール可能にする -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover text-center align-middle">
+            <thead class="table-light sticky-top">
+                <tr>
+                    <th class="bg-primary text-white">リソース</th>
+                    <th class="bg-primary text-white">アカウント</th>
+                    <?php for ($hour = 9; $hour <= 18; $hour++): ?>
+                        <th class="bg-primary text-white"><?= $hour ?>:00</th>
+                    <?php endfor; ?>
+                </tr>
+            </thead>
+            
+            <tbody>
             <?php 
-            $currentUserId = auth()->user()->id; // 現在のログインユーザーの ID
+            $currentUserId = auth()->user()->id;
             foreach ($resources as $resource): 
-                $resourceAccounts = isset($accounts[$resource['id']]) ? $accounts[$resource['id']] : [['id' => 0, 'username' => 'なし']];
+                $resourceAccounts = $accounts[$resource['id']] ?? [['id' => 0, 'username' => 'なし']];
                 foreach ($resourceAccounts as $account):
             ?>
                 <tr>
-                    <td><?= esc($resource['name']) ?></td>
+                    <td class="fw-bold"><?= esc($resource['name']) ?></td>
                     <td><?= esc($account['username']) ?></td>
                     <?php
-                    $hourlySlots = array_fill(9, 10, '<td></td>'); // 9:00～18:00の枠を作成
-                    
+                    // 9:00～18:00 のセルを生成（10個）
+                    $hourlySlots = array_fill(9, 10, '<td class="empty-slot"></td>');
+
                     foreach ($reservations as $res) {
-                        if ((int)$res['resource_id'] === (int)$resource['id'] && (int)$res['account_id'] === (int)$account['id']) {
+                        if ((int)$res['resource_id'] === (int)$resource['id'] && 
+                            ((int)$res['account_id'] === (int)$account['id'] || ($res['account_id'] == -1 && $account['id'] == 0))) {
+                    
                             $startHour = (int) date('H', strtotime($res['start_time']));
                             $endHour = (int) date('H', strtotime($res['end_time']));
                             $colspan = max(1, $endHour - $startHour);
 
-                            // 予約者が現在のログインユーザーかどうかで色を変更
                             $isOwnReservation = ($res['user_id'] == $currentUserId);
-                            $class = $isOwnReservation ? 'table-warning' : 'table-success';
+                            $class = $isOwnReservation ? 'bg-warning text-dark rounded shadow-sm' : 'bg-success text-white rounded shadow-sm';
 
-                            // 予約詳細をモーダルで表示するリンク
                             $userName = esc($res['user_name'] ?? '未設定');
 
                             $modalData = htmlspecialchars(json_encode([
@@ -61,14 +64,22 @@
                                 'isOwn' => $isOwnReservation
                             ]), ENT_QUOTES, 'UTF-8');
 
-                            $hourlySlots[$startHour] = "<td colspan='$colspan' class='$class text-white text-center'>
-                                    <a href='#' class='reservation-link text-white fw-bold' data-details='$modalData'>$userName</a>
+                            $hourlySlots[$startHour] = "<td colspan='$colspan' class='$class reservation-cell text-center fw-bold'>
+                                    <a href='#' class='reservation-link text-black fw-bold' data-details='$modalData'>$userName</a>
                                 </td>";
 
-                            // 予約済み時間帯のセルをスキップ
+                            // 予約済みの時間帯のセルを削除
                             for ($i = $startHour + 1; $i < $endHour; $i++) {
                                 unset($hourlySlots[$i]);
                             }
+                        }
+                    }
+                    // 予定のないセルに `data-*` 属性を適切に設定
+                    for ($hour = 9; $hour <= 18; $hour++) {
+                        if (isset($hourlySlots[$hour]) && strpos($hourlySlots[$hour], 'reservation-cell') === false) {
+                            $hourlySlots[$hour] = "<td class='empty-slot' data-resource-id='" . esc($resource['id']) . "' 
+                                                                    data-account-id='" . esc($account['id']) . "' 
+                                                                    data-time='" . esc($hour) . ":00'></td>";
                         }
                     }
                     ?>
@@ -77,8 +88,11 @@
             <?php endforeach; ?>
             <?php endforeach; ?>
         </tbody>
-    </table>
+
+        </table>
+    </div>
 </div>
+
 
 <!-- 予約詳細モーダル -->
 <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
@@ -111,6 +125,26 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.empty-slot').forEach(slot => {
+        slot.addEventListener('click', function () {
+            const resourceId = this.dataset.resourceId;
+            const accountId = this.dataset.accountId;
+            let time = this.dataset.time.replace(':', '-'); // `:` を `-` に置き換える
+
+            // デバッグ用ログ
+            console.log("resource_id:", resourceId, "account_id:", accountId, "time:", time);
+
+            // 値が正しく取得できているかチェック
+            if (!resourceId || !accountId || !time) {
+                alert("リソースID、アカウントID、または時間の取得に失敗しました。");
+                return;
+            }
+
+            // 予約登録ページに遷移
+            window.location.href = `/reservation/create/${resourceId}/${accountId}/${time}`;
+        });
+    });
+
     document.querySelectorAll('.reservation-link').forEach(link => {
         link.addEventListener('click', function(event) {
             event.preventDefault();
@@ -142,17 +176,37 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-    .table-success {
-        background-color: #28a745 !important;
-        color: white;
-        font-weight: bold;
-    }
+.table-success {
+    background-color: #28a745 !important;
+    color: white;
+    font-weight: bold;
+}
 
-    .table-warning {
-        background-color: #ffc107 !important;
-        color: black;
-        font-weight: bold;
-    }
+.table-warning {
+    background-color: #ffc107 !important;
+    color: black;
+    font-weight: bold;
+}
+
+/* 予定のないセル */
+.empty-slot {
+    cursor: pointer;
+    position: relative;
+    background-color: #ffffff;
+    transition: background-color 0.2s;
+}
+
+/* ホバー時に `+` アイコンを表示 */
+.empty-slot:hover::before {
+    content: "+";
+    font-size: 20px;
+    font-weight: bold;
+    color: #007bff;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
 </style>
 
 <?= $this->endSection() ?>
