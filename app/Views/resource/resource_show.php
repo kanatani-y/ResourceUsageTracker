@@ -1,4 +1,3 @@
-<?php helper('EncryptionHelper'); ?> <!-- ヘルパーを明示的にロード -->
 <?= $this->extend('layouts/layout') ?>
 
 <?= $this->section('title') ?>リソース詳細<?= $this->endSection() ?>
@@ -58,13 +57,37 @@
                             <th class="bg-light">説明</th>
                             <td class="text-break"><?= esc($resource['description'] ?? 'なし') ?></td>
                         </tr>
+                        <tr>
+                            <th class="bg-light">状態</th>
+                            <td>
+                                <?php if ($resource['deleted_at']) : ?>
+                                    <span class="badge bg-danger">削除済</span>
+                                <?php else : ?>
+                                    <?php
+                                    switch ($resource['status']) {
+                                        case 'available':
+                                            echo '<span class="badge bg-success">利用可能</span>';
+                                            break;
+                                        case 'maintenance':
+                                            echo '<span class="badge bg-info">メンテナンス中</span>';
+                                            break;
+                                        case 'retired':
+                                            echo '<span class="badge bg-secondary">廃止</span>';
+                                            break;
+                                    }
+                                    ?>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
 
                 <!-- アカウント一覧 -->
                 <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
                     <h5 class="mb-0"><i class="bi bi-key"></i> アカウント一覧</h5>
-                    <a href="<?= route_to('account.create', $resource['id']) ?>" class="btn btn-sm btn-success">
+                    <!-- 管理者 && 削除済み・廃止でない場合のみアカウント追加ボタンを表示 -->
+                    <a href="<?= route_to('account.create', $resource['id']) ?>" 
+                        class="btn btn-sm btn-success <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
                         <i class="bi bi-plus-lg"></i> アカウント追加
                     </a>
                 </div>
@@ -72,6 +95,7 @@
                 <?php if (empty($accounts)) : ?>
                     <p class="text-muted">このリソースのアカウント情報はありません。</p>
                 <?php else : ?>
+                <?php $authUser = auth()->user(); ?>
                     <table class="table table-bordered">
                         <thead class="table-light">
                             <tr>
@@ -80,7 +104,10 @@
                                 <th>ポート</th>
                                 <th>パスワード</th>
                                 <th>備考</th>
+                                
+                                <?php if ($authUser->inGroup('admin')): ?>
                                 <th>操作</th>
+                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -99,17 +126,20 @@
                                         </button>
                                     </td>
                                     <td><?= esc($account['description'] ?? '-') ?></td>
+                                    
+                                    <?php if ($authUser->inGroup('admin')): ?>
                                     <td>
-                                        <a href="<?= route_to('account.edit', $account['id']) ?>" class="btn btn-sm btn-primary">
+                                        <a href="<?= route_to('account.edit', $account['id']) ?>" class="btn btn-sm btn-primary <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
                                             <i class="bi bi-pencil-square"></i> 編集
                                         </a>
                                         <form action="<?= route_to('account.delete', $account['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('本当に削除しますか？');">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-sm btn-danger">
+                                            <button type="submit" class="btn btn-sm btn-danger <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
                                                 <i class="bi bi-trash"></i> 削除
                                             </button>
                                         </form>
                                     </td>
+                                    <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -120,7 +150,8 @@
                     <a href="<?= route_to('resource.index') ?>" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> 戻る
                     </a>
-                    <a href="<?= route_to('resource.edit', $resource['id']) ?>" class="btn btn-primary">
+                    <a href="<?= route_to('resource.edit', $resource['id']) ?>"
+                        class="btn btn-primary <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
                         <i class="bi bi-pencil-square"></i> 編集
                     </a>
                 </div>
@@ -135,12 +166,10 @@
         let button = masked.previousElementSibling; // ボタン要素
 
         if (masked.classList.contains("d-none")) {
-            // 非表示だったらマスク状態に戻す
             masked.classList.remove("d-none");
             plain.classList.add("d-none");
             button.innerHTML = '<i class="bi bi-eye"></i> 表示';
         } else {
-            // 表示する
             masked.classList.add("d-none");
             plain.classList.remove("d-none");
             button.innerHTML = '<i class="bi bi-eye-slash"></i> 隠す';

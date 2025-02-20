@@ -18,7 +18,7 @@ class CreateResourcesTable extends Migration
             'cpu'         => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
             'memory'      => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true],
             'storage'     => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
-            'status'      => ['type' => 'ENUM', 'constraint' => ['available', 'in_use', 'maintenance', 'retired'], 'default' => 'available'],
+            'status'      => ['type' => 'ENUM', 'constraint' => ['available', 'maintenance', 'retired'], 'default' => 'available'],
             'location'    => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'description' => ['type' => 'TEXT', 'null' => true],
             'created_at' => ['type' => 'TIMESTAMP', 'null' => true],

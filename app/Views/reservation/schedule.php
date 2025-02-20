@@ -4,23 +4,22 @@
 
 <?= $this->section('main') ?>
 <div class="container">
-    <h3 class="mb-3">予約スケジュール（<?= esc($selectedDate) ?>）</h3>
+    <h3 class="mb-3"><i class="bi bi-list-check"></i> 予約スケジュール</h3>
 
     <!-- 日付選択 -->
     <form method="get" class="mb-3 d-flex align-items-center">
         <label for="date" class="form-label me-2">日付選択:</label>
         <input type="date" name="date" id="date" class="form-control w-auto me-2" value="<?= esc($selectedDate) ?>">
-        <button type="submit" class="btn btn-primary">表示</button>
     </form>
 
     <!-- テーブルをスクロール可能にする -->
     <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover text-center align-middle">
+        <table class="table table-bordered table-hover text-center align-middle">
             <thead class="table-light sticky-top">
                 <tr>
                     <th class="bg-primary text-white">リソース</th>
                     <th class="bg-primary text-white">アカウント</th>
-                    <?php for ($hour = 9; $hour <= 18; $hour++): ?>
+                    <?php for ($hour = 9; $hour <= 17; $hour++): ?>
                         <th class="bg-primary text-white"><?= $hour ?>:00</th>
                     <?php endfor; ?>
                 </tr>
@@ -29,16 +28,32 @@
             <tbody>
             <?php 
             $currentUserId = auth()->user()->id;
-            foreach ($resources as $resource): 
-                $resourceAccounts = $accounts[$resource['id']] ?? [['id' => 0, 'username' => 'なし']];
+            $resourceRowspan = []; // 各リソースの行数をカウント
+
+            // **リソースごとにアカウント数をカウント**
+            foreach ($resources as $resource) {
+                $resourceId = $resource['id'];
+                $resourceAccounts = $accounts[$resourceId] ?? [['id' => 0, 'username' => 'なし']];
+                $resourceRowspan[$resourceId] = count($resourceAccounts);
+            }
+
+            foreach ($resources as $resource):
+                $resourceId = $resource['id'];
+                $resourceAccounts = $accounts[$resourceId] ?? [['id' => 0, 'username' => 'なし']];
+                $firstRow = true; // 最初の行フラグ
+
                 foreach ($resourceAccounts as $account):
             ?>
                 <tr>
-                    <td class="fw-bold"><?= esc($resource['name']) ?></td>
+                    <?php if ($firstRow): ?>
+                        <td class="fw-bold align-middle" rowspan="<?= $resourceRowspan[$resourceId] ?>">
+                            <?= esc($resource['name']) ?>
+                        </td>
+                    <?php endif; ?>
                     <td><?= esc($account['username']) ?></td>
                     <?php
-                    // 9:00～18:00 のセルを生成（10個）
-                    $hourlySlots = array_fill(9, 10, '<td class="empty-slot"></td>');
+                    // **9:00～17:00 のセルを生成**
+                    $hourlySlots = array_fill(9, 9, '<td class="empty-slot"></td>');
 
                     foreach ($reservations as $res) {
                         if ((int)$res['resource_id'] === (int)$resource['id'] && 
@@ -65,30 +80,32 @@
                             ]), ENT_QUOTES, 'UTF-8');
 
                             $hourlySlots[$startHour] = "<td colspan='$colspan' class='$class reservation-cell text-center fw-bold'>
-                                    <a href='#' class='reservation-link text-black fw-bold' data-details='$modalData'>$userName</a>
+                                    <a href='#' class='reservation-link text-white fw-bold' data-details='$modalData'>$userName</a>
                                 </td>";
 
-                            // 予約済みの時間帯のセルを削除
                             for ($i = $startHour + 1; $i < $endHour; $i++) {
                                 unset($hourlySlots[$i]);
                             }
                         }
                     }
-                    // 予定のないセルに `data-*` 属性を適切に設定
-                    for ($hour = 9; $hour <= 18; $hour++) {
+
+                    for ($hour = 9; $hour <= 17; $hour++) {
                         if (isset($hourlySlots[$hour]) && strpos($hourlySlots[$hour], 'reservation-cell') === false) {
                             $hourlySlots[$hour] = "<td class='empty-slot' data-resource-id='" . esc($resource['id']) . "' 
                                                                     data-account-id='" . esc($account['id']) . "' 
+                                                                    data-reservation-date='" . esc($selectedDate) . "' 
                                                                     data-time='" . esc($hour) . ":00'></td>";
                         }
                     }
                     ?>
                     <?= implode('', $hourlySlots) ?>
                 </tr>
-            <?php endforeach; ?>
-            <?php endforeach; ?>
-        </tbody>
-
+            <?php 
+                $firstRow = false; // 2行目以降はリソースのセルを省略
+                endforeach;
+            endforeach;
+            ?>
+            </tbody>
         </table>
     </div>
 </div>
@@ -125,23 +142,37 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
+    const dateInput = document.getElementById('date');
+
+    function fetchSchedule() {
+        const selectedDate = dateInput.value;
+        if (!selectedDate) return;
+
+        // ページをリロードせずにスケジュールを更新
+        window.location.href = `?date=${selectedDate}`;
+    }
+
+    dateInput.addEventListener('change', fetchSchedule);
+
     document.querySelectorAll('.empty-slot').forEach(slot => {
         slot.addEventListener('click', function () {
             const resourceId = this.dataset.resourceId;
             const accountId = this.dataset.accountId;
+            const reservationDate = this.dataset.reservationDate;
             let time = this.dataset.time.replace(':', '-'); // `:` を `-` に置き換える
 
             // デバッグ用ログ
-            console.log("resource_id:", resourceId, "account_id:", accountId, "time:", time);
+            console.log("resource_id:", resourceId, "account_id:", accountId, "reservationDate:", reservationDate, "time:", time);
 
             // 値が正しく取得できているかチェック
-            if (!resourceId || !accountId || !time) {
-                alert("リソースID、アカウントID、または時間の取得に失敗しました。");
+            if (!resourceId || !accountId || !reservationDate || !time) {
+                alert("リソースID、アカウントID、予約日、または時間の取得に失敗しました。");
                 return;
             }
 
             // 予約登録ページに遷移
-            window.location.href = `/reservation/create/${resourceId}/${accountId}/${time}`;
+            window.location.href = `/reservation/create/${resourceId}/${accountId}/${reservationDate}/${time}`;
         });
     });
 

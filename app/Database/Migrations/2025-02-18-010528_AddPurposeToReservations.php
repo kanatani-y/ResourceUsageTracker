@@ -13,7 +13,7 @@ class AddPurposeToReservations extends Migration
         $this->forge->addColumn('reservations', [
             'purpose' => [
                 'type'       => 'VARCHAR',
-                'constraint' => 500,
+                'constraint' => 100,
                 'null'       => true,
                 'after'      => 'end_time'
             ],

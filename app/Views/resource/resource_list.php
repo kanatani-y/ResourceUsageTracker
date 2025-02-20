@@ -5,15 +5,13 @@
 <?= $this->section('main') ?>
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-2">
-            <h4 class="mb-0">リソース管理</h4>
+            <h4 class="mb-0"><i class="bi bi-server"></i> リソース一覧</h4>
             <a href="<?= route_to('resource.create') ?>" class="btn btn-sm btn-success">
                 <i class="bi bi-plus-lg"></i> 追加
             </a>
         </div>
 
-        <?php if (session('message')) : ?>
-            <div class="alert alert-success"><?= session('message') ?></div>
-        <?php endif ?>
+        <?php $authUser = auth()->user(); ?>
 
         <table class="table table-bordered table-hover">
             <thead class="table-light">
@@ -24,7 +22,9 @@
                     <th>IPアドレス</th>
                     <th>種類</th>
                     <th>状態</th>
+                    <?php if ($authUser->inGroup('admin')): ?>
                     <th>操作</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -33,7 +33,7 @@
                         <td><?= $resource['id'] ?></td>
                         <td>
                             <a href="<?= route_to('resource.show', $resource['id']) ?>" class="text-decoration-none">
-                                <?= esc($resource['name']) ?>
+                                <i class="bi bi-server"></i> <?= esc($resource['name']) ?>
                             </a>
                         </td>
                         <td><?= esc($resource['hostname']) ?></td>
@@ -61,9 +61,8 @@
                                 ?>
                             <?php endif; ?>
                         </td>
+                        <?php if ($authUser->inGroup('admin')): ?>
                         <td class="d-flex gap-2">
-                            
-
                             <div class="btn-group" role="group">
                                 <a href="<?= route_to('resource.show', $resource['id']) ?>" class="btn btn-sm btn-info">
                                     <i class="bi bi-eye"></i> 詳細
@@ -84,6 +83,7 @@
                                 <?php endif; ?>
                             </div>
                         </td>
+                        <?php endif; ?>
                     </tr>
                 <?php endforeach ?>
             </tbody>

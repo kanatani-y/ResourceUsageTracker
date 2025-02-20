@@ -42,38 +42,45 @@
                             <ul class="dropdown-menu">
                                 <li>
                                     <a class="dropdown-item" href="<?= route_to('reservation.schedule') ?>">
-                                        <i class="bi bi-list-check"></i> 予約状況確認
+                                        <i class="bi bi-list-check"></i> 予約スケジュール
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('reservation.create') ?>">
-                                        <i class="bi bi-calendar-plus"></i> 予約登録
-                                    </a>
+                                    <?php if (!$authUser->inGroup('guest')): ?> 
+                                        <a class="dropdown-item" href="<?= route_to('reservation.create') ?>">
+                                            <i class="bi bi-calendar-plus"></i> 予約登録
+                                        </a>
+                                    <?php endif; ?>
                                 </li>
+
                             </ul>
                         </li>
 
-                        <!-- リソース管理 (管理者のみ) -->
-                        <?php if ($authUser->inGroup('admin')): ?>
+                        <!-- リソース管理 (ゲスト以外) -->
+                        <?php if (!$authUser->inGroup('guest')): ?> 
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-hdd-network"></i> リソースマスタ管理
+                                <i class="bi bi-hdd-network"></i> リソース管理
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
                                     <a class="dropdown-item" href="<?= route_to('resource.index') ?>">
-                                        <i class="bi bi-server"></i> リソースマスタ一覧
+                                        <i class="bi bi-server"></i> リソース一覧
                                     </a>
                                 </li>
+                                <?php if ($authUser->inGroup('admin')): ?>
                                 <li>
                                     <a class="dropdown-item" href="<?= route_to('resource.create') ?>">
-                                        <i class="bi bi-plus-square"></i> リソースマスタ登録
+                                        <i class="bi bi-plus-square"></i> リソース登録
                                     </a>
                                 </li>
+                                <?php endif; ?>
                             </ul>
                         </li>
+                        <?php endif; ?>
 
-                        <!-- アカウント管理 -->
+                        <?php if ($authUser->inGroup('admin')): ?>
+                        <!-- アカウント管理 (管理者のみ) -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-key"></i> アカウント管理
@@ -87,6 +94,7 @@
                             </ul>
                         </li>
 
+                        <!-- ユーザー管理 (管理者のみ) -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-people"></i> ユーザー管理
@@ -106,18 +114,20 @@
                         </li>
                         <?php endif; ?>
 
-                        <!-- ユーザー情報 -->
+                        <!-- 設定 -->
                         <li class="nav-item dropdown ms-5">
                             <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-person-circle me-2"></i>
                                 <?= esc($authUser->fullname ?? $authUser->username) ?> さん
                             </a>
                             <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" href="<?= route_to('profile.settings', $authUser->id) ?>">
-                                        <i class="bi bi-gear"></i> 設定
-                                    </a>
-                                </li>
+                                <?php if (!$authUser->inGroup('guest')): ?> 
+                                    <li>
+                                        <a class="dropdown-item" href="<?= route_to('profile.settings', $authUser->id) ?>">
+                                            <i class="bi bi-gear"></i> 設定
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
                                 <li>
                                     <form id="logoutForm" action="<?= route_to('logout') ?>" method="post">
                                         <?= csrf_field() ?>

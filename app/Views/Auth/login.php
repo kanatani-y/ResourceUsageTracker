@@ -12,7 +12,7 @@
                 <form action="<?= url_to('login') ?>" method="post">
                     <?= csrf_field() ?>
 
-                    <!-- Email -->
+                    <!-- Username -->
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" name="username" placeholder="<?= lang('Auth.username') ?>" value="<?= old('username') ?>" required>
                         <label for="floatingUsernameInput"><?= lang('Auth.username') ?></label>
@@ -36,6 +36,13 @@
 
                     <div class="d-grid col-12 col-md-8 mx-auto m-3">
                         <button type="submit" class="btn btn-primary btn-block"><?= lang('Auth.login') ?></button>
+                    </div>
+
+                    <!-- ゲストログインボタン -->
+                    <div class="d-grid col-12 col-md-8 mx-auto m-3">
+                        <a href="<?= url_to('guest.login') ?>" class="btn btn-outline-secondary btn-block">
+                            <i class="bi bi-person-circle"></i> ゲストとしてログイン
+                        </a>
                     </div>
 
                     <?php if (setting('Auth.allowMagicLinkLogins')) : ?>

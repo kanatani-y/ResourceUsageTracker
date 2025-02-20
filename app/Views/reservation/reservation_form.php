@@ -56,9 +56,9 @@
                         // 現在の日付（YYYY-MM-DD）
                         $today = date('Y-m-d');
 
-                        // 時間の選択肢（9:00～23:00）
+                        // 時間の選択肢（9:00～18:00）
                         $timeOptions = [];
-                        for ($hour = 9; $hour <= 23; $hour++) {
+                        for ($hour = 9; $hour <= 18; $hour++) {
                             $timeOptions[] = sprintf('%02d:00', $hour);
                         }
 
@@ -66,7 +66,7 @@
                         $currentHour = (int) date('H');
                         $currentMinutes = (int) date('i');
                         $defaultStartHour = max(9, ($currentMinutes < 30 ? $currentHour : $currentHour + 1));
-                        $defaultStartHour = min($defaultStartHour, 23); // 上限を 23:00 に制限
+                        $defaultStartHour = min($defaultStartHour, 18); // 上限を 18:00 に制限
                         $defaultStartTime = sprintf('%02d:00', $defaultStartHour);
 
                         // 終了時刻（開始時刻の1時間後）
@@ -106,11 +106,30 @@
                             </div>
                         </div>
 
+                        <?php if (auth()->user()->inGroup('admin')): ?>
+                            <div class="row">
+                                <div class="mb-3">
+                                    <label for="user_id" class="form-label">予約者</label>
+                                    <select name="user_id" id="user_id" class="form-select">
+                                        <?php foreach ($users as $user): ?>
+                                            <option value="<?= esc($user->id) ?>"
+                                                <?= ($user->id == ($reservation['user_id'] ?? auth()->user()->id)) ? 'selected' : '' ?>>
+                                                <?= esc($user->fullname ?? $user->username) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <input type="hidden" name="user_id" value="<?= auth()->user()->id ?>">
+                            <p class="form-control-plaintext"><?= esc(auth()->user()->fullname ?? auth()->user()->username) ?></p>
+                        <?php endif; ?>
+
                         <div class="row">
                             <!-- 使用目的 -->
                             <div class="col-md-12 mb-3">
                                 <label for="purpose" class="form-label">使用目的</label>
-                                <textarea class="form-control" id="purpose" name="purpose" rows="3"><?= old('purpose', $reservation['purpose'] ?? '') ?></textarea>
+                                <textarea class="form-control" id="purpose" name="purpose" rows="3" maxlength="100"><?= old('purpose', $reservation['purpose'] ?? '') ?></textarea>
                             </div>
                         </div>
 
@@ -155,38 +174,31 @@
 
 
     document.addEventListener("DOMContentLoaded", function () {
-        // **アカウントの初期選択**
+        // **アカウントリストを更新**
         function updateAccountSelection() {
-            const resourceId = String(resourceSelect.value);
+            const resourceId = resourceSelect.value;
             accountSelect.innerHTML = '<option value="">アカウントを選択</option>';
 
             console.log("Selected resourceId:", resourceId);
             console.log("Available accounts:", accounts);
-
-            // **resourceId に対応するアカウントデータを抽出**
-            const filteredAccounts = accounts.filter(account => account.resource_id === resourceId);
-
-            console.log("Filtered accounts:", filteredAccounts);
-
-            if (filteredAccounts.length > 0) {
-                filteredAccounts.forEach(account => {
-                    let option = document.createElement("option");
-                    option.value = String(account.id);
+            if (accounts[resourceId] && accounts[resourceId].length > 0) {
+                accountSelect.disabled = false;
+                accountSelect.setAttribute('required', 'required'); // 必須にする
+                accounts[resourceId].forEach(account => {
+                    let option = document.createElement('option');
+                    option.value = account.id;
                     option.textContent = account.username;
-
-                    console.log("Checking option:", option.value, selectedAccountId);
-
+                    accountSelect.appendChild(option);
                     // **初期選択を適用**
                     if (String(option.value) === String(selectedAccountId)) {
                         option.selected = true;
-                        console.log("✅ Selected:", option.value);
                     }
                     accountSelect.appendChild(option);
                 });
-                accountSelect.disabled = false;
             } else {
                 accountSelect.innerHTML = '<option value="-1" selected>なし</option>';
                 accountSelect.disabled = true;
+                accountSelect.removeAttribute('required'); // 必須を解除
             }
         }
 
@@ -229,10 +241,10 @@
 
                             reservationList.innerHTML += `
                                 <li class="list-group-item">
-                                    <span class="badge bg-primary">${reservationDate}</span>
-                                    <span class="reservation-time me-2">${startTime} - ${endTime}</span>
-                                    <p class="mb-1"><strong>${res.user_name ?? '不明'}</strong>（${accountName}）</p>
-                                    <small class="text-muted">${res.purpose ?? 'なし'}</small>
+                                    <span class="badge bg-primary">${startTime} - ${endTime}</span>
+                                    <span class="reservation-name me-2">${res.user_name ?? '不明'}</span>
+                                    <p class="mb-1"><small><i class="bi bi-key"></i> アカウント：${accountName}</small></p>
+                                    <p class="mb-1"><small><i class="bi bi-briefcase"></i> 使用目的：${res.purpose ?? 'なし'}</small></p>
                                 </li>
                             `;
                         });
@@ -253,26 +265,6 @@
         reservationDateInput.addEventListener("change", fetchReservations);
         resourceSelect.addEventListener("change", fetchReservations);
         accountSelect.addEventListener("change", fetchReservations);
-    });
-
-
-    resourceSelect.addEventListener('change', function() {
-        const resourceId = this.value;
-        accountSelect.innerHTML = '<option value="">アカウントを選択</option>';
-
-        if (accounts[resourceId] && accounts[resourceId].length > 0) {
-            accountSelect.disabled = false;
-            accountSelect.setAttribute('required', 'required'); // 必須にする
-            accounts[resourceId].forEach(account => {
-                let option = document.createElement('option');
-                option.value = account.id;
-                option.textContent = account.username;
-                accountSelect.appendChild(option);
-            });
-        } else {
-            accountSelect.disabled = true;
-            accountSelect.removeAttribute('required'); // 必須を解除
-        }
     });
 
     document.getElementById("start_time").addEventListener("change", function() {
@@ -301,13 +293,20 @@
     font-size: 14px;
     padding: 5px 10px;
 }
-.reservation-timeline .reservation-time {
+.reservation-timeline {
     font-weight: bold;
     color: #333;
     min-width: 90px;
-    text-align: center;
+    text-align: left;
     display: inline-block;
 }
-
+.reservation-name {
+    font-weight: bold;
+    color: #333;
+    min-width: 90px;
+    text-align: left;
+    display: inline-block;
+    padding-left: 5px;
+}
 </style>
 <?= $this->endSection() ?>

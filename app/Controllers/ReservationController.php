@@ -38,8 +38,13 @@ class ReservationController extends BaseController
         ]);
     }
 
-    public function create($resource_id = null, $account_id = null, $time = null, $reservation_date = null)
+    public function create($resource_id = null, $account_id = null, $reservation_date = null, $time = null)
     {
+        // **ゲストユーザーは予約作成画面にアクセスできない**
+        if (auth()->user()->inGroup('guest')) {
+            return redirect()->route('reservation.schedule')->with('error', 'ゲストユーザーは予約を登録できません。');
+        }
+        
         // `time` の `-` を `:` に戻す
         if ($time) {
             $time = str_replace('-', ':', $time);
@@ -47,7 +52,7 @@ class ReservationController extends BaseController
     
         $resourceModel = new ResourceModel();
         $accountModel = new AccountModel();
-        $reservationModel = new ReservationModel();
+        $userModel = new \App\Models\UserModel();
     
         // リソース一覧取得
         $resources = $resourceModel->select('id, name, hostname')->orderBy('name', 'ASC')->findAll();
@@ -56,19 +61,44 @@ class ReservationController extends BaseController
         $accounts = [];
         foreach ($resources as $resource) {
             $resourceAccounts = $accountModel->where('resource_id', $resource['id'])->findAll();
-            $accounts[$resource['id']] = !empty($resourceAccounts) ? $resourceAccounts : [['id' => -1, 'username' => 'なし']];
+            $accounts[$resource['id']] = !empty($resourceAccounts) ? $resourceAccounts : [];
         }
     
+        $userModel = new \App\Models\UserModel();
+
+        $users = auth()->user()->inGroup('admin')
+            ? $userModel->select('users.id, users.username, users.fullname')
+                ->join('auth_groups_users agu', 'agu.user_id = users.id')
+                ->where('agu.group !=', 'guest') // guest グループを除外
+                ->findAll()
+            : [];
+        
         // **予約日をURLから取得し、デフォルト値を設定**
         $selectedDate = $reservation_date ?? date('Y-m-d');
     
         // **開始時刻のデフォルト設定**
-        $startTime = $time ?? "09:00"; // 指定がない場合は `09:00` をデフォルトに
-    
-        // **終了時刻を開始時刻の+1時間に設定**
+        if (!$time) {
+            $currentHour = (int) date('H');
+            $currentMinutes = (int) date('i');
+
+            if ($currentHour < 9) {
+                $startTime = "09:00";
+            } elseif ($currentHour >= 17) {
+                $startTime = "17:00";
+            } else {
+                if ($currentMinutes <= 30) {
+                    $startTime = sprintf('%02d:30', $currentHour);
+                } else {
+                    $startTime = sprintf('%02d:00', min($currentHour + 1, 17));
+                }
+            }
+        } else {
+            $startTime = $time;
+        }
+
+        // **終了時刻を開始時刻の+1時間に設定（最大18:00）**
         $startHour = (int) explode(':', $startTime)[0];
-        $endHour = min($startHour + 1, 23); // 終了時刻が 23:00 を超えないようにする
-        $endTime = sprintf('%02d:00', $endHour);
+        $endTime = sprintf('%02d:00', min($startHour + 1, 18));
     
         return view('reservation/reservation_form', [
             'resource_id'  => $resource_id,
@@ -76,14 +106,20 @@ class ReservationController extends BaseController
             'time'         => $startTime,  // 開始時刻
             'end_time'     => $endTime,    // 終了時刻
             'resources'    => $resources,
-            'accounts'     => $accounts[$resource_id] ?? [], // 指定された `resource_id` のアカウントリストを渡す
+            'accounts'     => $accounts,
             'reservations' => [],
             'selectedDate' => $selectedDate, // 予約日
+            'users'        => $users,
         ]);
     }
 
     public function store()
     {
+        // **ゲストユーザーは予約できない**
+        if (auth()->user()->inGroup('guest')) {
+            return redirect()->route('reservation.schedule')->with('error', 'ゲストユーザーは予約を登録できません。');
+        }
+
         $reservationModel = new ReservationModel();
     
         // **送信されたデータを結合**
@@ -94,6 +130,16 @@ class ReservationController extends BaseController
         $startDateTime = "$date $startTime:00"; // YYYY-MM-DD HH:MM:00
         $endDateTime = "$date $endTime:00";     // YYYY-MM-DD HH:MM:00
 
+        // **管理者以外は過去日の予約を登録できない**
+        if (!auth()->user()->inGroup('admin') && $date < date('Y-m-d')) {
+            return redirect()->back()->withInput()->with('error', '過去日の予約はできません。');
+        }
+
+         // **管理者が指定したユーザーを使用、それ以外は自分のID**
+        $user_id = (auth()->user()->inGroup('admin') && $this->request->getPost('user_id'))
+            ? $this->request->getPost('user_id')
+            : auth()->user()->id;
+        
         // **デフォルト値を適用**
         $account_id = $this->request->getPost('account_id');
         if (empty($account_id)) {
@@ -104,7 +150,7 @@ class ReservationController extends BaseController
         $data = [
             'resource_id' => $this->request->getPost('resource_id'),
             'account_id'  => $account_id,
-            'user_id'     => auth()->user()->id,
+            'user_id'     => $user_id,
             'start_time'  => $startDateTime,
             'end_time'    => $endDateTime,
             'purpose'     => $this->request->getPost('purpose'),
@@ -118,8 +164,8 @@ class ReservationController extends BaseController
         // **データ保存**
         $reservationModel->insert($data);
     
-        return redirect()->to(route_to('reservation.schedule', ['date' => $date]))
-                        ->with('message', '予約を追加しました。');
+        return redirect()->to(route_to('reservation.schedule') . '?date=' . urlencode($date))
+                ->with('message', '予約を追加しました。');
     }
 
     public function delete($id)
@@ -228,6 +274,11 @@ class ReservationController extends BaseController
         $startDateTime = "$date $startTime:00";
         $endDateTime = "$date $endTime:00";
 
+        // **管理者以外は過去日の予約を変更できない**
+        if (!auth()->user()->inGroup('admin') && $date < date('Y-m-d')) {
+            return redirect()->route('reservation.schedule')->with('error', '過去日の予約は変更できません。');
+        }
+
         // **デフォルト値を適用**
         $account_id = $this->request->getPost('account_id');
         if (empty($account_id)) {
@@ -274,6 +325,7 @@ class ReservationController extends BaseController
                 ->join('users', 'users.id = reservations.user_id', 'left')
                 ->join('accounts', 'accounts.id = reservations.account_id', 'left OUTER')
                 ->where('reservations.start_time >=', "$selectedDate 00:00:00")
+                ->where('reservations.start_time <=', "$selectedDate 23:59:59")
                 ->where('reservations.resource_id', $resourceId);
     
             // アカウントありの場合のみ `account_id` 条件を適用

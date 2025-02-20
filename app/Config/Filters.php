@@ -37,6 +37,7 @@ class Filters extends BaseFilters
         'performance'   => PerformanceMetrics::class,
         'session'       => SessionAuth::class,
         'group' => \CodeIgniter\Shield\Filters\GroupFilter::class,
+        'auth' => \CodeIgniter\Shield\Filters\SessionAuth::class,
     ];
 
     /**
@@ -73,8 +74,8 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            'csrf',
-            'session' => ['except' => ['login*', 'register', 'auth/a/*', 'logout']],
+            'csrf' => ['except' => ['guest-login']],
+            'session' => ['except' => ['login*', 'register', 'auth/a/*', 'logout', 'guest-login']],
             // 'invalidchars',
         ],
         'after' => [

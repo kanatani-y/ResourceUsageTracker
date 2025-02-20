@@ -5,9 +5,7 @@
 <?= $this->section('main') ?>
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-2">
-        <h4 class="mb-0">
-            <?= !empty($resource) ? esc($resource['name']) . ' のアカウント一覧' : '全アカウント一覧' ?>
-        </h4>
+        <h4 class="mb-0">アカウント一覧</h4>
         <a href="<?= isset($resource) ? route_to('account.create', $resource['id']) : route_to('account.create_no_resource') ?>" class="btn btn-sm btn-success">
             <i class="bi bi-plus-lg"></i> 追加
         </a>

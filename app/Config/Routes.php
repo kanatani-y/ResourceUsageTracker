@@ -9,6 +9,7 @@ use CodeIgniter\Router\RouteCollection;
 
 $routes->get('login', 'AuthController::login', ['as' => 'login']);
 $routes->post('logout', 'AuthController::logout', ['as' => 'logout']);
+$routes->get('guest-login', 'AuthController::guestLogin', ['as' => 'guest.login']);
 $routes->get('/', 'ReservationController::schedule');
 
 service('auth')->routes($routes);
@@ -22,7 +23,7 @@ $routes->group('admin', ['filter' => 'group:admin'], function ($routes) {
     $routes->get('users/delete/(:num)', 'UserController::delete/$1', ['as' => 'admin.users.delete']);
 });
 
-$routes->group('resource', ['filter' => 'group:admin'], function ($routes) {
+$routes->group('resource', function ($routes) {
     $routes->get('/', 'ResourceController::index', ['as' => 'resource.index']);
     $routes->get('create', 'ResourceController::create', ['as' => 'resource.create']);
     $routes->post('store', 'ResourceController::store', ['as' => 'resource.store']);
@@ -49,6 +50,12 @@ $routes->group('profile', function ($routes) {
 });
 
 $routes->group('reservation', function ($routes) {
+    // **ゲストを除外するミドルウェア**
+    $routes->group('', ['filter' => 'auth'], function ($routes) {
+        $routes->get('create', 'ReservationController::create', ['as' => 'reservation.create']);
+        $routes->post('store', 'ReservationController::store', ['as' => 'reservation.store']);
+    });
+
     $routes->get('/', 'ReservationController::schedule', ['as' => 'reservation.index']);
     $routes->get('date/(:segment)?', 'ReservationController::index/$1', ['as' => 'reservation.by_date']);
     $routes->get('schedule', 'ReservationController::schedule', ['as' => 'reservation.schedule']);
@@ -57,7 +64,7 @@ $routes->group('reservation', function ($routes) {
     $routes->get('create', 'ReservationController::create', ['as' => 'reservation.create']);
 
     // `create` ルート（パラメータあり: `resource_id`, `account_id`, `time`）
-    $routes->get('create/(:num)/(:num)/(:segment)', 'ReservationController::create/$1/$2/$3', ['as' => 'reservation.create.with_params']);
+    $routes->get('create/(:num)/(:num)/(:segment)/(:segment)', 'ReservationController::create/$1/$2/$3/$4', ['as' => 'reservation.create.with_params']);
 
     $routes->post('store', 'ReservationController::store', ['as' => 'reservation.store']);
     $routes->get('edit/(:num)', 'ReservationController::edit/$1', ['as' => 'reservation.edit']);

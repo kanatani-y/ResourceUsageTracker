@@ -34,7 +34,7 @@ class ReservationModel extends Model
             'label' => '終了時間',
         ],
         'purpose' => [
-            'rules' => 'permit_empty|max_length[500]',
+            'rules' => 'permit_empty|max_length[100]',
             'label' => '使用目的',
         ],
     ];
@@ -61,5 +61,13 @@ class ReservationModel extends Model
         }
     
         return $this->countAllResults() > 0;
+    }
+
+    protected function beforeInsert(array $data)
+    {
+        if (auth()->user()->inGroup('guest')) {
+            throw new \RuntimeException('ゲストユーザーは予約登録できません。');
+        }
+        return $data;
     }
 }

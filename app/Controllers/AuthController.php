@@ -10,12 +10,12 @@ class AuthController extends Controller
     public function login()
     {
         if (auth()->loggedIn()) {
-            return redirect()->route('home'); // 既にログイン済みならホームへ
+            return redirect()->route('reservation.schedule'); // 既にログイン済みならホームへ
         }
     
         if ($this->request->getMethod() === 'post') {
             $credentials = [
-                'email'    => $this->request->getPost('email'),
+                'username'    => $this->request->getPost('username'),
                 'password' => $this->request->getPost('password'),
             ];
     
@@ -32,7 +32,31 @@ class AuthController extends Controller
         return view('Auth/login');
     }
     
-    
+    public function guestLogin()
+    {
+        $auth = service('authentication');
+
+        // **現在のログインセッションを削除**
+        if (auth()->loggedIn()) {
+            auth()->logout();
+            session()->destroy();
+        }
+
+        // ゲストユーザー情報（デモ用）
+        $credentials = [
+            'username' => 'guest',
+            'password' => 'guest123' // 事前に設定されたパスワード
+        ];
+
+        $auth = auth('session')->getAuthenticator();
+        $result = $auth->attempt($credentials);
+
+        if (! $result->isOK()) {
+            return redirect()->route('login')->withInput()->with('error', $result->reason());
+        }
+
+        return redirect()->route('reservation.schedule')->with('message', 'ゲストとしてログインしました。');
+    }
 
     public function logout()
     {
