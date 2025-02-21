@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/layout') ?>
+<?= $this->extend('layouts/common') ?>
 
 <?= $this->section('title') ?><?= isset($account) ? 'アカウント編集' : 'アカウント登録' ?><?= $this->endSection() ?>
 
@@ -14,7 +14,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="<?= isset($account) && isset($account['id']) ? route_to('account.update', $account['id']) : route_to('account.store') ?>" method="post" id="accountForm">
+                    <form action="<?= isset($account) && isset($account['id']) ? route_to('accounts.update', $account['id']) : route_to('accounts.store') ?>" method="post" id="accountForm">
                         <?= csrf_field() ?>
 
                         <div class="mb-3">
@@ -71,6 +71,16 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">状態</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="available" <?= old('status', $account['status'] ?? '') === 'available' ? 'selected' : '' ?>>利用可能</option>
+                                    <option value="restricted" <?= old('status', $account['status'] ?? '') === 'restricted' ? 'selected' : '' ?>>利用禁止</option>
+                                    <option value="retired" <?= old('status', $account['status'] ?? '') === 'retired' ? 'selected' : '' ?>>廃止</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label for="description" class="form-label">説明 (任意)</label>
                             <textarea class="form-control" id="description" name="description" rows="3"
@@ -79,11 +89,11 @@
 
                         <div class="d-flex justify-content-between">
                         <?php if (isset($selectedResource['id'])) : ?>
-                            <a href="<?= route_to('resource.show', $selectedResource['id']) ?>" class="btn btn-secondary">
+                            <a href="<?= route_to('resources.show', $selectedResource['id']) ?>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
                         <?php else : ?>
-                            <a href="<?= route_to('resource.index') ?>" class="btn btn-secondary">
+                            <a href="<?= route_to('resources.index') ?>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
                         <?php endif; ?>

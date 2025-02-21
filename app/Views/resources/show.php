@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/layout') ?>
+<?= $this->extend('layouts/common') ?>
 
 <?= $this->section('title') ?>リソース詳細<?= $this->endSection() ?>
 
@@ -61,15 +61,15 @@
                             <th class="bg-light">状態</th>
                             <td>
                                 <?php if ($resource['deleted_at']) : ?>
-                                    <span class="badge bg-danger">削除済</span>
+                                    <span class="badge bg-secondary">削除済</span>
                                 <?php else : ?>
                                     <?php
                                     switch ($resource['status']) {
                                         case 'available':
                                             echo '<span class="badge bg-success">利用可能</span>';
                                             break;
-                                        case 'maintenance':
-                                            echo '<span class="badge bg-info">メンテナンス中</span>';
+                                        case 'restricted':
+                                            echo '<span class="badge bg-danger">利用禁止</span>';
                                             break;
                                         case 'retired':
                                             echo '<span class="badge bg-secondary">廃止</span>';
@@ -82,26 +82,28 @@
                     </tbody>
                 </table>
 
+                <?php $authUser = auth()->user(); ?>
                 <!-- アカウント一覧 -->
                 <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
                     <h5 class="mb-0"><i class="bi bi-key"></i> アカウント一覧</h5>
-                    <!-- 管理者 && 削除済み・廃止でない場合のみアカウント追加ボタンを表示 -->
-                    <a href="<?= route_to('account.create', $resource['id']) ?>" 
-                        class="btn btn-sm btn-success <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
-                        <i class="bi bi-plus-lg"></i> アカウント追加
-                    </a>
+                    <?php if ($authUser->inGroup('admin')): ?>
+                        <a href="<?= route_to('accounts.create', $resource['id']) ?>" 
+                            class="btn btn-sm btn-success <?= $resource['deleted_at'] || $resource['status'] == 'retired' ? 'disabled' : '' ?>">
+                            <i class="bi bi-plus-lg"></i> アカウント追加
+                        </a>
+                    <?php endif; ?>
                 </div>
 
                 <?php if (empty($accounts)) : ?>
                     <p class="text-muted">このリソースのアカウント情報はありません。</p>
                 <?php else : ?>
-                <?php $authUser = auth()->user(); ?>
                     <table class="table table-bordered">
                         <thead class="table-light">
                             <tr>
                                 <th>ユーザー名</th>
                                 <th>接続方式</th>
                                 <th>ポート</th>
+                                <th>状態</th>
                                 <th>パスワード</th>
                                 <th>備考</th>
                                 
@@ -117,6 +119,21 @@
                                     <td><?= esc($account['connection_type']) ?></td>
                                     <td><?= $account['port'] == -1 ? '-' : esc($account['port']) ?></td>
                                     <td>
+                                        <?php
+                                            switch ($account['status']) {
+                                                case 'available':
+                                                    echo '<span class="badge bg-success">利用可能</span>';
+                                                    break;
+                                                case 'restricted':
+                                                    echo '<span class="badge bg-danger">利用禁止</span>';
+                                                    break;
+                                                case 'retired':
+                                                    echo '<span class="badge bg-secondary">廃止</span>';
+                                                    break;
+                                            }
+                                        ?>
+                                    </td>
+                                    <td>
                                         <span id="password-<?= esc($account['id']) ?>" class="password-mask">••••••</span>
                                         <span id="password-plain-<?= esc($account['id']) ?>" class="d-none">
                                             <?= esc(base64url_decode($account['password'])) ?>
@@ -129,10 +146,10 @@
                                     
                                     <?php if ($authUser->inGroup('admin')): ?>
                                     <td>
-                                        <a href="<?= route_to('account.edit', $account['id']) ?>" class="btn btn-sm btn-primary <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
+                                        <a href="<?= route_to('accounts.edit', $account['id']) ?>" class="btn btn-sm btn-primary <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
                                             <i class="bi bi-pencil-square"></i> 編集
                                         </a>
-                                        <form action="<?= route_to('account.delete', $account['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('本当に削除しますか？');">
+                                        <form action="<?= route_to('accounts.delete', $account['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('本当に削除しますか？');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-sm btn-danger <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
                                                 <i class="bi bi-trash"></i> 削除
@@ -147,13 +164,15 @@
                 <?php endif; ?>
 
                 <div class="d-flex justify-content-between mt-3">
-                    <a href="<?= route_to('resource.index') ?>" class="btn btn-secondary">
+                    <a href="<?= route_to('resources.index') ?>" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> 戻る
                     </a>
-                    <a href="<?= route_to('resource.edit', $resource['id']) ?>"
-                        class="btn btn-primary <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
-                        <i class="bi bi-pencil-square"></i> 編集
-                    </a>
+                    <?php if ($authUser->inGroup('admin')): ?>
+                        <a href="<?= route_to('resources.edit', $resource['id']) ?>"
+                            class="btn btn-primary <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
+                            <i class="bi bi-pencil-square"></i> 編集
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

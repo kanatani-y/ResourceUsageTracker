@@ -41,13 +41,13 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('reservation.schedule') ?>">
+                                    <a class="dropdown-item" href="<?= route_to('reservations.schedule') ?>">
                                         <i class="bi bi-list-check"></i> 予約スケジュール
                                     </a>
                                 </li>
                                 <li>
                                     <?php if (!$authUser->inGroup('guest')): ?> 
-                                        <a class="dropdown-item" href="<?= route_to('reservation.create') ?>">
+                                        <a class="dropdown-item" href="<?= route_to('reservations.create') ?>">
                                             <i class="bi bi-calendar-plus"></i> 予約登録
                                         </a>
                                     <?php endif; ?>
@@ -64,13 +64,13 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('resource.index') ?>">
+                                    <a class="dropdown-item" href="<?= route_to('resources.index') ?>">
                                         <i class="bi bi-server"></i> リソース一覧
                                     </a>
                                 </li>
                                 <?php if ($authUser->inGroup('admin')): ?>
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('resource.create') ?>">
+                                    <a class="dropdown-item" href="<?= route_to('resources.create') ?>">
                                         <i class="bi bi-plus-square"></i> リソース登録
                                     </a>
                                 </li>
@@ -87,7 +87,7 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('account.index') ?>">
+                                    <a class="dropdown-item" href="<?= route_to('accounts.index') ?>">
                                         <i class="bi bi-list-ul"></i> アカウント一覧
                                     </a>
                                 </li>
@@ -106,7 +106,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('admin.register') ?>">
+                                    <a class="dropdown-item" href="<?= route_to('admin.users.register') ?>">
                                         <i class="bi bi-person-plus"></i> ユーザ登録
                                     </a>
                                 </li>
@@ -123,7 +123,7 @@
                             <ul class="dropdown-menu">
                                 <?php if (!$authUser->inGroup('guest')): ?> 
                                     <li>
-                                        <a class="dropdown-item" href="<?= route_to('profile.settings', $authUser->id) ?>">
+                                        <a class="dropdown-item" href="<?= route_to('profiles.settings', $authUser->id) ?>">
                                             <i class="bi bi-gear"></i> 設定
                                         </a>
                                     </li>

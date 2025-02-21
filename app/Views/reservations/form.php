@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/layout') ?>
+<?= $this->extend('layouts/common') ?>
 
 <?= $this->section('title') ?><?= isset($reservation) ? '予約編集' : '新規予約' ?><?= $this->endSection() ?>
 
@@ -13,7 +13,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="<?= isset($reservation) ? route_to('reservation.update', $reservation['id']) : route_to('reservation.store') ?>" method="post">
+                    <form action="<?= isset($reservation) ? route_to('reservations.update', $reservation['id']) : route_to('reservations.store') ?>" method="post">
                         <?= csrf_field() ?>
 
                         <div class="mb-3">
@@ -129,13 +129,13 @@
                             <!-- 使用目的 -->
                             <div class="col-md-12 mb-3">
                                 <label for="purpose" class="form-label">使用目的</label>
-                                <textarea class="form-control" id="purpose" name="purpose" rows="3" maxlength="100"><?= old('purpose', $reservation['purpose'] ?? '') ?></textarea>
+                                <textarea class="form-control" id="purpose" name="purpose" rows="3" maxlength="100" required><?= old('purpose', $reservation['purpose'] ?? '') ?></textarea>
                             </div>
                         </div>
 
                         <!-- 予約ボタン -->
                         <div class="d-flex justify-content-between">
-                            <a href="<?= site_url('reservation') ?>" class="btn btn-secondary">
+                            <a href="<?= site_url('reservations') ?>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
                             <button type="submit" class="btn btn-primary">
@@ -216,7 +216,7 @@
 
             if (!selectedDate || !resourceId) return;
 
-            let url = `<?= site_url('reservation/getReservations') ?>?date=${selectedDate}&resource_id=${resourceId}`;
+            let url = `<?= site_url('reservations/getReservations') ?>?date=${selectedDate}&resource_id=${resourceId}`;
             if (accountId && accountId !== "-1") {
                 url += `&account_id=${accountId}`;
             }

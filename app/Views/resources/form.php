@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/layout') ?>
+<?= $this->extend('layouts/common') ?>
 
 <?= $this->section('title') ?><?= isset($resource) ? 'リソース編集' : '新規リソース登録' ?><?= $this->endSection() ?>
 
@@ -14,7 +14,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="<?= isset($resource) ? route_to('resource.update', $resource['id']) : route_to('resource.store') ?>" method="post">
+                    <form action="<?= isset($resource) ? route_to('resources.update', $resource['id']) : route_to('resources.store') ?>" method="post">
                         <?= csrf_field() ?>
 
                         <div class="row">
@@ -22,14 +22,15 @@
                             <div class="col-md-6 mb-3">
                                 <label for="name" class="form-label">リソース名</label>
                                 <input type="text" class="form-control" id="name" name="name" 
-                                    value="<?= old('name', $resource['name'] ?? '') ?>" required>
+                                    value="<?= old('name', $resource['name'] ?? '') ?>" required maxlength="50">
                             </div>
 
                             <!-- ホスト名 -->
                             <div class="col-md-6 mb-3">
                                 <label for="hostname" class="form-label">ホスト名</label>
                                 <input type="text" class="form-control" id="hostname" name="hostname" 
-                                    value="<?= old('hostname', $resource['hostname'] ?? '') ?>" required>
+                                    pattern="^[a-zA-Z0-9._-]+$" title="半角英数字、ドット、ハイフン、アンダースコアのみ利用可能能"
+                                    value="<?= old('hostname', $resource['hostname'] ?? '') ?>" required maxlength="50">
                             </div>
                         </div>
 
@@ -42,7 +43,7 @@
                                     <option value="Server" <?= old('type', $resource['type'] ?? 'PC') === 'Server' ? 'selected' : '' ?>>Server</option>
                                     <option value="Network" <?= old('type', $resource['type'] ?? 'PC') === 'Network' ? 'selected' : '' ?>>Network</option>
                                     <option value="Storage" <?= old('type', $resource['type'] ?? 'PC') === 'Storage' ? 'selected' : '' ?>>Storage</option>
-                                    <option value="Other" <?= old('type', $resource['type'] ?? 'PC') === 'Other' ? 'selected' : '' ?>>Other</option>
+                                    <option value="Other" <?= old('type', $resource['type'] ?? 'PC') === 'Other' ? 'selected' : '' ?>>その他</option>
                                 </select>
                             </div>
 
@@ -50,7 +51,7 @@
                             <div class="col-md-6 mb-3">
                                 <label for="os" class="form-label">OS</label>
                                 <input type="text" class="form-control" id="os" name="os" 
-                                    value="<?= old('os', $resource['os'] ?? '') ?>">
+                                    value="<?= old('os', $resource['os'] ?? '') ?>" maxlength="100">
                             </div>
                         </div>
 
@@ -59,28 +60,30 @@
                             <div class="col-md-6 mb-3">
                                 <label for="ip_address" class="form-label">IPアドレス</label>
                                 <input type="text" class="form-control" id="ip_address" name="ip_address" 
-                                    value="<?= old('ip_address', $resource['ip_address'] ?? '') ?>">
+                                    value="<?= old('ip_address', $resource['ip_address'] ?? '') ?>"
+                                    pattern="^(\d{1,3}\.){3}\d{1,3}$" title="IPv4形式 (例: 192.168.1.1) を入力してください"
+                                    maxlength="15">
                             </div>
 
                             <!-- CPU コア数-->
                             <div class="col-md-6 mb-3">
                                 <label for="cpu" class="form-label">CPU</label>
-                                <input type="text" class="form-control" id="cpu" name="cpu" 
-                                    value="<?= old('cpu', $resource['cpu'] ?? '') ?>">
+                                <input type="text" class="form-control" id="cpu" name="cpu" min="0"
+                                    value="<?= old('cpu', $resource['cpu'] ?? '') ?>" inputmode="numeric">
                             </div>
                         </div>
 
                         <div class="row">
                             <!-- メモリ -->
                             <div class="col-md-6 mb-3">
-                                <label for="memory" class="form-label">メモリ</label>
-                                <input type="text" class="form-control" id="memory" name="memory" 
-                                    value="<?= old('memory', $resource['memory'] ?? '') ?>">
+                                <label for="memory" class="form-label">メモリ容量</label>
+                                <input type="text" class="form-control" id="memory" name="memory" min="0"
+                                    value="<?= old('memory', $resource['memory'] ?? '') ?>" inputmode="numeric">
                             </div>
 
                             <!-- ストレージ -->
                             <div class="col-md-6 mb-3">
-                                <label for="storage" class="form-label">ストレージ</label>
+                                <label for="storage" class="form-label">ストレージ容量</label>
                                 <input type="text" class="form-control" id="storage" name="storage" 
                                     value="<?= old('storage', $resource['storage'] ?? '') ?>">
                             </div>
@@ -92,7 +95,7 @@
                                 <label for="status" class="form-label">ステータス</label>
                                 <select class="form-select" id="status" name="status" required>
                                     <option value="available" <?= old('status', $resource['status'] ?? '') === 'available' ? 'selected' : '' ?>>利用可能</option>
-                                    <option value="maintenance" <?= old('status', $resource['status'] ?? '') === 'maintenance' ? 'selected' : '' ?>>メンテナンス中</option>
+                                    <option value="restricted" <?= old('status', $resource['status'] ?? '') === 'restricted' ? 'selected' : '' ?>>利用禁止</option>
                                     <option value="retired" <?= old('status', $resource['status'] ?? '') === 'retired' ? 'selected' : '' ?>>廃止</option>
                                 </select>
                             </div>
@@ -101,7 +104,7 @@
                             <div class="col-md-6 mb-3">
                                 <label for="location" class="form-label">設置場所</label>
                                 <input type="text" class="form-control" id="location" name="location" 
-                                    value="<?= old('location', $resource['location'] ?? '') ?>">
+                                    value="<?= old('location', $resource['location'] ?? '') ?>" maxlength="255">
                             </div>
                         </div>
 
@@ -113,7 +116,7 @@
 
                         <!-- ボタン -->
                         <div class="d-flex justify-content-between">
-                            <a href="<?= site_url('resource') ?>" class="btn btn-secondary">
+                            <a href="<?= site_url('resources') ?>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
                             <button type="submit" class="btn btn-primary">

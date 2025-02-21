@@ -76,10 +76,10 @@ class ResourceModel extends Model
             'label' => 'ストレージ'
         ],
         'status' => [
-            'rules' => 'permit_empty|in_list[available, maintenance, retired]',
+            'rules' => 'permit_empty|in_list[available, restricted, retired]',
             'label' => 'ステータス',
             'errors' => [
-                'in_list' => 'ステータスは「available, maintenance, retired」のいずれかのみ選択できます。',
+                'in_list' => 'ステータスは「available, restricted, retired」のいずれかのみ選択できます。',
             ]
         ],
         'location' => [

@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/layout') ?>
+<?= $this->extend('layouts/common') ?>
 
 <?= $this->section('title') ?>ユーザー設定<?= $this->endSection() ?>
 
@@ -21,7 +21,7 @@
                         </div>
                     <?php endif ?>
 
-                    <form action="<?= route_to('profile.update') ?>" method="post" id="userSettingsForm">
+                    <form action="<?= route_to('profiles.update') ?>" method="post" id="userSettingsForm">
                         <?= csrf_field() ?>
 
                         <div class="row">

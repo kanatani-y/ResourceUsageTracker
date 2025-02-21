@@ -15,7 +15,7 @@
  * CODEIGNITER COMMAND-LINE TOOLS
  * --------------------------------------------------------------------
  * The main entry point into the CLI system and allows you to run
- * commands and perform maintenance on your application.
+ * commands and perform restricted on your application.
  */
 
 /*

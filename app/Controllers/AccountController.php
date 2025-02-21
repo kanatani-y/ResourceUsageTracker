@@ -17,7 +17,7 @@ class AccountController extends BaseController
         $resource = $resource_id ? $resourceModel->find($resource_id) : null;
     
         if ($resource_id && !$resource) {
-            return redirect()->route('resource.index')->with('error', 'リソースが見つかりません。');
+            return redirect()->route('resources.index')->with('error', 'リソースが見つかりません。');
         }
     
         // アカウント取得
@@ -34,7 +34,7 @@ class AccountController extends BaseController
                 ->findAll();
         }
     
-        return view('account/account_list', [
+        return view('account/list', [
             'resource' => $resource,
             'accounts' => $accounts,
         ]);
@@ -50,7 +50,7 @@ class AccountController extends BaseController
             $selectedResource = $resourceModel->find($resource_id);
         }
     
-        return view('account/account_form', [
+        return view('account/form', [
             'resource_id'       => $resource_id,
             'resources'         => $resources,
             'selectedResource'  => $selectedResource, // 明示的に変更
@@ -77,11 +77,12 @@ class AccountController extends BaseController
             'connection_type' => $this->request->getPost('connection_type'),
             'port'            => $this->request->getPost('port') !== '' ? $this->request->getPost('port') : -1,
             'description'     => $this->request->getPost('description'),
+            'status'          => $this->request->getPost('status') ?? 'available',
         ];
     
         $accountModel->insert($data);
     
-        return redirect()->to(route_to('account.index', $data['resource_id']))
+        return redirect()->to(route_to('accounts.index', $data['resource_id']))
                         ->with('message', 'アカウントが登録されました。');
     }
     
@@ -92,15 +93,15 @@ class AccountController extends BaseController
     
         $account = $accountModel->find($id);
         if (!$account) {
-            return redirect()->route('account.index')->with('error', 'アカウントが見つかりません。');
+            return redirect()->route('accounts.index')->with('error', 'アカウントが見つかりません。');
         }
     
         $resources = $resourceModel->orderBy('name', 'ASC')->findAll();
         $selectedResource = $resourceModel->find($account['resource_id']);
     
-        return view('account/account_form', [
+        return view('account/form', [
             'account' => $account,
-            'resources' => $resources, // 修正: これを追加
+            'resources' => $resources,
             'selectedResource' => $selectedResource
         ]);
     }
@@ -121,6 +122,7 @@ class AccountController extends BaseController
             'connection_type' => $this->request->getPost('connection_type'),
             'port'            => $this->request->getPost('port') !== '' ? $this->request->getPost('port') : -1, 
             'description'     => $this->request->getPost('description'),
+            'status'          => $this->request->getPost('status'),
         ];
     
         // パスワード変更があれば更新
@@ -130,7 +132,7 @@ class AccountController extends BaseController
     
         $accountModel->update($id, $data);
     
-        return redirect()->to(route_to('account.index', $account['resource_id']))
+        return redirect()->to(route_to('accounts.index', $account['resource_id']))
                         ->with('message', 'アカウントが更新されました。');
     }
 

@@ -10,7 +10,16 @@ class UserModel extends ShieldUserModel
         'username',
         'fullname',
         'active',
+        'last_active',
+        'created_at', 
+        'updated_at', 
+        'deleted_at',
     ];
+
+    protected $useTimestamps = true; // 自動的に `created_at`, `updated_at` を管理
+    protected $useSoftDeletes = true; // `deleted_at` をソフトデリートとして利用
+
+    protected $dateFormat = 'datetime'; // 日付フォーマットの指定
 
     // **バリデーションルール**
     protected $validationRules = [

@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/layout') ?>
+<?= $this->extend('layouts/common') ?>
 
 <?= $this->section('title') ?>予約スケジュール（<?= esc($selectedDate) ?>）<?= $this->endSection() ?>
 
@@ -12,13 +12,13 @@
         <input type="date" name="date" id="date" class="form-control w-auto me-2" value="<?= esc($selectedDate) ?>">
     </form>
 
-    <!-- テーブルをスクロール可能にする -->
+    <!-- テーブル -->
     <div class="table-responsive">
         <table class="table table-bordered table-hover text-center align-middle">
             <thead class="table-light sticky-top">
                 <tr>
-                    <th class="bg-primary text-white">リソース</th>
-                    <th class="bg-primary text-white">アカウント</th>
+                    <th class="bg-primary text-white" colspan="2">リソース</th>
+                    <th class="bg-primary text-white" colspan="2">アカウント</th>
                     <?php for ($hour = 9; $hour <= 17; $hour++): ?>
                         <th class="bg-primary text-white"><?= $hour ?>:00</th>
                     <?php endfor; ?>
@@ -28,29 +28,65 @@
             <tbody>
             <?php 
             $currentUserId = auth()->user()->id;
-            $resourceRowspan = []; // 各リソースの行数をカウント
-
-            // **リソースごとにアカウント数をカウント**
-            foreach ($resources as $resource) {
-                $resourceId = $resource['id'];
-                $resourceAccounts = $accounts[$resourceId] ?? [['id' => 0, 'username' => 'なし']];
-                $resourceRowspan[$resourceId] = count($resourceAccounts);
-            }
-
+            $isAdmin = auth()->user()->inGroup('admin');
+            $isGuest = auth()->user()->inGroup('guest');
+            
             foreach ($resources as $resource):
                 $resourceId = $resource['id'];
-                $resourceAccounts = $accounts[$resourceId] ?? [['id' => 0, 'username' => 'なし']];
-                $firstRow = true; // 最初の行フラグ
+                $resourceAccounts = $accounts[$resourceId] ?? [['id' => 0, 'username' => 'なし', 'status' => 'available']];
+                $firstRow = true;
 
                 foreach ($resourceAccounts as $account):
             ?>
                 <tr>
                     <?php if ($firstRow): ?>
-                        <td class="fw-bold align-middle" rowspan="<?= $resourceRowspan[$resourceId] ?>">
-                            <?= esc($resource['name']) ?>
+                        <td class="fw-bold text-start"
+                            rowspan="<?= count($resourceAccounts) ?>">
+                            <?php if (!$isGuest): ?>
+                                <a href="<?= route_to('resources.show', $resource['id']) ?>" class="text-decoration-none">
+                                    <i class="bi bi-server"></i> <?= esc($resource['name']) ?>
+                                </a>
+                            <?php else: ?>
+                                <i class="bi bi-server"></i> <?= esc($resource['name']) ?>
+                            <?php endif; ?>
+                        </td>
+                        <!-- リソース状態 -->
+                        <td class="text-start" rowspan="<?= count($resourceAccounts) ?>">
+                            <?php
+                                switch ($resource['status']) {
+                                    case 'available':
+                                        echo '<span class="badge bg-success">利用可能</span>';
+                                        break;
+                                    case 'restricted':
+                                        echo '<span class="badge bg-danger">利用禁止</span>';
+                                        break;
+                                    case 'retired':
+                                        echo '<span class="badge bg-secondary">廃止</span>';
+                                        break;
+                                }
+                            ?>
                         </td>
                     <?php endif; ?>
-                    <td><?= esc($account['username']) ?></td>
+
+                    <td class="text-start <?= in_array($account['status'], ['restricted', 'retired']) ? 'text-muted' : '' ?>">
+                        <?= esc($account['username']) ?>
+                    </td>
+                    
+                    <!-- アカウント状態 -->
+                    <td class="text-start">
+                        <?php if ($account['username'] === 'なし'): ?>
+                            <span>-</span>
+                        <?php elseif ($account['status'] === 'available'): ?>
+                            <span class="badge bg-success">利用可能</span>
+                        <?php elseif ($account['status'] === 'restricted'): ?>
+                            <span class="badge bg-danger">利用禁止</span>
+                        <?php elseif ($account['status'] === 'retired'): ?>
+                            <span class="badge bg-secondary">廃止</span>
+                        <?php else: ?>
+                            <span>-</span>
+                        <?php endif; ?>
+                    </td>
+
                     <?php
                     // **9:00～17:00 のセルを生成**
                     $hourlySlots = array_fill(9, 9, '<td class="empty-slot"></td>');
@@ -58,18 +94,19 @@
                     foreach ($reservations as $res) {
                         if ((int)$res['resource_id'] === (int)$resource['id'] && 
                             ((int)$res['account_id'] === (int)$account['id'] || ($res['account_id'] == -1 && $account['id'] == 0))) {
-                    
+                            
                             $startHour = (int) date('H', strtotime($res['start_time']));
                             $endHour = (int) date('H', strtotime($res['end_time']));
                             $colspan = max(1, $endHour - $startHour);
 
                             $isOwnReservation = ($res['user_id'] == $currentUserId);
-                            $class = $isOwnReservation ? 'bg-warning text-dark rounded shadow-sm' : 'bg-success text-white rounded shadow-sm';
+                            $class = $isOwnReservation ? 'bg-warning rounded shadow-sm' : 'bg-success rounded shadow-sm';
 
                             $userName = esc($res['user_name'] ?? '未設定');
 
                             $modalData = htmlspecialchars(json_encode([
                                 'id' => $res['id'],
+                                'resource_id' => $res['resource_id'],
                                 'user_name' => $userName,
                                 'resource' => esc($res['resource_name']),
                                 'account' => esc($res['account_name']),
@@ -80,7 +117,7 @@
                             ]), ENT_QUOTES, 'UTF-8');
 
                             $hourlySlots[$startHour] = "<td colspan='$colspan' class='$class reservation-cell text-center fw-bold'>
-                                    <a href='#' class='reservation-link text-white fw-bold' data-details='$modalData'>$userName</a>
+                                    <a href='#' class='reservation-link text-white fw-bold text-decoration-none' data-details='$modalData'>$userName</a>
                                 </td>";
 
                             for ($i = $startHour + 1; $i < $endHour; $i++) {
@@ -91,17 +128,22 @@
 
                     for ($hour = 9; $hour <= 17; $hour++) {
                         if (isset($hourlySlots[$hour]) && strpos($hourlySlots[$hour], 'reservation-cell') === false) {
-                            $hourlySlots[$hour] = "<td class='empty-slot' data-resource-id='" . esc($resource['id']) . "' 
-                                                                    data-account-id='" . esc($account['id']) . "' 
-                                                                    data-reservation-date='" . esc($selectedDate) . "' 
-                                                                    data-time='" . esc($hour) . ":00'></td>";
+                            if (!$isGuest && $account['status'] === 'available' && $resource['status'] === 'available') {
+                                $hourlySlots[$hour] = "<td class='empty-slot' data-resource-id='" . esc($resource['id']) . "' 
+                                                                        data-account-id='" . esc($account['id']) . "' 
+                                                                        data-reservation-date='" . esc($selectedDate) . "' 
+                                                                        data-time='" . esc($hour) . ":00'></td>";
+                            } else {
+                                $hourlySlots[$hour] = 
+                                    $account['status'] !== 'available' || $resource['status'] !== 'available' ? "<td class='text-muted'>×</td>" : "<td>×</td>";
+                            }
                         }
                     }
                     ?>
                     <?= implode('', $hourlySlots) ?>
                 </tr>
             <?php 
-                $firstRow = false; // 2行目以降はリソースのセルを省略
+                $firstRow = false; 
                 endforeach;
             endforeach;
             ?>
@@ -122,7 +164,18 @@
             <div class="modal-body">
                 <table class="table table-bordered">
                     <tr><th class="bg-light">予約者</th><td id="modalUser"></td></tr>
-                    <tr><th class="bg-light">リソース</th><td id="modalResource"></td></tr>
+                    <tr>
+                        <th class="bg-light">リソース</th>
+                        <td id="modalResource">
+                        <?php if (!auth()->user()->inGroup('guest')): ?>
+                            <a href="#" id="modalResourceLink" class="text-decoration-none fw-bold">
+                                <i class="bi bi-server"></i> <span id="modalResourceName"></span>
+                            </a>
+                        <?php else: ?>
+                            <i class="bi bi-server"></i> <span id="modalResourceName"></span>
+                        <?php endif; ?>
+                        </td>
+                    </tr>
                     <tr><th class="bg-light">アカウント</th><td id="modalAccount"></td></tr>
                     <tr><th class="bg-light">開始時間</th><td id="modalStartTime"></td></tr>
                     <tr><th class="bg-light">終了時間</th><td id="modalEndTime"></td></tr>
@@ -131,7 +184,7 @@
             </div>
             <div class="modal-footer">
                 <!-- 編集ボタン（現在のユーザーのみ表示） -->
-                <a href="#" id="editReservationBtn" class="btn btn-warning d-none">
+                <a href="#" id="editReservationBtn" class="btn btn-primary d-none">
                     <i class="bi bi-pencil-square"></i> 編集
                 </a>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
@@ -172,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // 予約登録ページに遷移
-            window.location.href = `/reservation/create/${resourceId}/${accountId}/${reservationDate}/${time}`;
+            window.location.href = `/reservations/create/${resourceId}/${accountId}/${reservationDate}/${time}`;
         });
     });
 
@@ -183,17 +236,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // モーダルにデータをセット
             document.getElementById('modalUser').textContent = details.user_name;
-            document.getElementById('modalResource').textContent = details.resource;
             document.getElementById('modalAccount').textContent = details.account;
             document.getElementById('modalStartTime').textContent = details.start_time;
             document.getElementById('modalEndTime').textContent = details.end_time;
             document.getElementById('modalPurpose').textContent = details.purpose;
 
+            // リソース名とリンクを適用
+            let modalResourceName = document.getElementById('modalResourceName');
+            let modalResourceLink = document.getElementById('modalResourceLink');
+            modalResourceName.textContent = details.resource;
+            
+            // modalResourceLink が存在するかチェックしてリンクをセット
+            if (modalResourceLink) {
+                modalResourceLink.href = `<?= site_url('resources/show') ?>/${details.resource_id}`;
+            }
+
             // 編集ボタンの表示/非表示
             let editBtn = document.getElementById('editReservationBtn');
-            if (details.isOwn) {
+            let isAdmin = <?= json_encode(auth()->user()->inGroup('admin')) ?>;
+
+            if (isAdmin || details.isOwn) {
                 editBtn.classList.remove('d-none');
-                editBtn.href = "<?= site_url('reservation/edit') ?>/" + details.id;
+                editBtn.href = "<?= site_url('reservations/edit') ?>/" + details.id;
             } else {
                 editBtn.classList.add('d-none');
             }
@@ -213,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: bold;
 }
 
-.table-warning {
+.table-danger {
     background-color: #ffc107 !important;
     color: black;
     font-weight: bold;
@@ -237,6 +301,12 @@ document.addEventListener('DOMContentLoaded', function() {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+.disabled-link {
+    pointer-events: none;
+    color: gray;
+    text-decoration: none;
 }
 </style>
 

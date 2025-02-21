@@ -31,7 +31,7 @@ class ReservationController extends BaseController
             ->orderBy('start_time', 'ASC')
             ->findAll();
     
-        return view('reservation/index', [
+        return view('reservations/index', [
             'resources'    => $resources,
             'reservations' => $reservations,
             'selectedDate' => $date,
@@ -42,7 +42,7 @@ class ReservationController extends BaseController
     {
         // **ゲストユーザーは予約作成画面にアクセスできない**
         if (auth()->user()->inGroup('guest')) {
-            return redirect()->route('reservation.schedule')->with('error', 'ゲストユーザーは予約を登録できません。');
+            return redirect()->route('reservations.schedule')->with('error', 'ゲストユーザーは予約を登録できません。');
         }
         
         // `time` の `-` を `:` に戻す
@@ -54,13 +54,25 @@ class ReservationController extends BaseController
         $accountModel = new AccountModel();
         $userModel = new \App\Models\UserModel();
     
+        if ($account_id) {
+            $account = $accountModel->find($account_id);
+    
+            // 利用禁止または廃止のアカウントは予約不可
+            if ($account && in_array($account['status'], ['restricted', 'retired'])) {
+                return redirect()->route('reservations.schedule')->with('error', 'このアカウントは予約できません。');
+            }
+        }
+
         // リソース一覧取得
         $resources = $resourceModel->select('id, name, hostname')->orderBy('name', 'ASC')->findAll();
     
-        // 各リソースのアカウント一覧取得（デフォルト値を設定）
+        // **各リソースのアカウント一覧取得（利用可能のもののみ）**
         $accounts = [];
         foreach ($resources as $resource) {
-            $resourceAccounts = $accountModel->where('resource_id', $resource['id'])->findAll();
+            $resourceAccounts = $accountModel->where('resource_id', $resource['id'])
+                                            ->where('status', 'available') // 予約可能なアカウントのみ取得
+                                            ->findAll();
+    
             $accounts[$resource['id']] = !empty($resourceAccounts) ? $resourceAccounts : [];
         }
     
@@ -70,6 +82,7 @@ class ReservationController extends BaseController
             ? $userModel->select('users.id, users.username, users.fullname')
                 ->join('auth_groups_users agu', 'agu.user_id = users.id')
                 ->where('agu.group !=', 'guest') // guest グループを除外
+                ->where('users.active', 1) // 無効ユーザーをブロック
                 ->findAll()
             : [];
         
@@ -100,7 +113,7 @@ class ReservationController extends BaseController
         $startHour = (int) explode(':', $startTime)[0];
         $endTime = sprintf('%02d:00', min($startHour + 1, 18));
     
-        return view('reservation/reservation_form', [
+        return view('reservations/form', [
             'resource_id'  => $resource_id,
             'account_id'   => $account_id,
             'time'         => $startTime,  // 開始時刻
@@ -117,7 +130,7 @@ class ReservationController extends BaseController
     {
         // **ゲストユーザーは予約できない**
         if (auth()->user()->inGroup('guest')) {
-            return redirect()->route('reservation.schedule')->with('error', 'ゲストユーザーは予約を登録できません。');
+            return redirect()->route('reservations.schedule')->with('error', 'ゲストユーザーは予約を登録できません。');
         }
 
         $reservationModel = new ReservationModel();
@@ -164,7 +177,7 @@ class ReservationController extends BaseController
         // **データ保存**
         $reservationModel->insert($data);
     
-        return redirect()->to(route_to('reservation.schedule') . '?date=' . urlencode($date))
+        return redirect()->to(route_to('reservations.schedule') . '?date=' . urlencode($date))
                 ->with('message', '予約を追加しました。');
     }
 
@@ -172,7 +185,7 @@ class ReservationController extends BaseController
     {
         $reservationModel = new ReservationModel();
         $reservationModel->delete($id);
-        return redirect()->route('reservation.schedule')->with('message', '予約を削除しました。');
+        return redirect()->route('reservations.schedule')->with('message', '予約を削除しました。');
     }
 
     public function schedule()
@@ -188,28 +201,33 @@ class ReservationController extends BaseController
         $resources = $resourceModel->findAll();
         $accounts = [];
         foreach ($resources as $resource) {
-            $resourceAccounts = $accountModel->where('resource_id', $resource['id'])->findAll();
+            $resourceAccounts = $accountModel
+                ->select('id, username, status') // status を追加
+                ->where('resource_id', $resource['id'])
+                ->findAll();
+    
             if (empty($resourceAccounts)) {
                 // アカウントがない場合、デフォルト値を追加
-                $accounts[$resource['id']] = [['id' => 0, 'username' => 'なし']];
+                $accounts[$resource['id']] = [['id' => 0, 'username' => 'なし', 'status' => 'available']];
             } else {
                 $accounts[$resource['id']] = $resourceAccounts;
             }
         }
-
+    
         // 予約データ取得（選択日）
         $reservations = $reservationModel
             ->select('reservations.*, resources.name as resource_name, 
                 IFNULL(accounts.username, "なし") as account_name, 
+                accounts.status as account_status, 
                 users.fullname as user_name')
             ->join('resources', 'resources.id = reservations.resource_id')
-            ->join('accounts', 'accounts.id = reservations.account_id AND reservations.account_id > 0', 'left') 
+            ->join('accounts', 'accounts.id = reservations.account_id AND reservations.account_id > 0', 'left')
             ->join('users', 'users.id = reservations.user_id', 'left')
             ->where("start_time BETWEEN '$selectedDate 00:00:00' AND '$selectedDate 23:59:59'")
             ->orderBy('start_time', 'ASC')
             ->findAll();
-
-        return view('reservation/schedule', [
+    
+        return view('reservations/schedule', [
             'resources'    => $resources,
             'accounts'     => $accounts,
             'reservations' => $reservations,
@@ -219,22 +237,47 @@ class ReservationController extends BaseController
 
     public function edit($id)
     {
+        // **ゲストユーザーは予約編集画面にアクセスできない**
+        if (auth()->user()->inGroup('guest')) {
+            return redirect()->route('reservations.schedule')->with('error', 'ゲストユーザーは予約を編集できません。');
+        }
+        
         $reservationModel = new ReservationModel();
         $resourceModel = new ResourceModel();
         $accountModel = new AccountModel();
+        $userModel = new \App\Models\UserModel();
     
         // 予約情報を取得
         $reservation = $reservationModel->find($id);
         if (!$reservation) {
-            return redirect()->route('reservation.schedule')->with('error', '指定された予約が見つかりませんでした。');
+            return redirect()->route('reservations.schedule')->with('error', '指定された予約が見つかりませんでした。');
         }
     
-        // 利用可能なリソース（編集時は変更不可）
-        $resources = $resourceModel->findAll();
-        $accounts = $accountModel->where('resource_id', $reservation['resource_id'])->findAll();
+        $account = $accountModel->find($reservation['account_id']);
     
-        // **予約状況の取得（予約日以降）**
-        $selectedDate = date('Y-m-d');
+        // 利用禁止または廃止のアカウントは予約不可
+        if ($account && in_array($account['status'], ['restricted', 'retired'])) {
+            return redirect()->route('reservations.schedule')->with('error', 'このアカウントは予約できません。');
+        }
+        
+        // リソース一覧取得
+        $resources = $resourceModel->select('id, name, hostname')->orderBy('name', 'ASC')->findAll();
+
+        // **各リソースのアカウント一覧取得（利用可能のもののみ）**
+        $accounts = [];
+        foreach ($resources as $resource) {
+            $resourceAccounts = $accountModel->where('resource_id', $resource['id'])
+                                            ->where('status', 'available') // 予約可能なアカウントのみ取得
+                                            ->findAll();
+    
+            $accounts[$resource['id']] = !empty($resourceAccounts) ? $resourceAccounts : [];
+        }
+        // **開始・終了時間の設定**
+        $startTime = date('H:i', strtotime($reservation['start_time']));
+        $endTime = date('H:i', strtotime($reservation['end_time']));
+        $selectedDate = date('Y-m-d', strtotime($reservation['start_time']));
+    
+        // **予約状況の取得**
         $reservations = $reservationModel
             ->select('reservations.*, users.fullname AS user_name')
             ->join('users', 'users.id = reservations.user_id')
@@ -243,14 +286,26 @@ class ReservationController extends BaseController
             ->orderBy('start_time', 'ASC')
             ->findAll();
     
-        return view('reservation/reservation_form', [
+        // **ユーザー情報（管理者のみ選択可能）**
+        $users = auth()->user()->inGroup('admin')
+            ? $userModel->select('users.id, users.username, users.fullname')
+                ->join('auth_groups_users agu', 'agu.user_id = users.id')
+                ->where('agu.group !=', 'guest') // guest グループを除外
+                ->where('users.active', 1) // 無効ユーザーをブロック
+                ->findAll()
+            : [];
+    
+        return view('reservations/form', [
             'reservation'  => $reservation,
             'resource_id'  => $reservation['resource_id'],
             'account_id'   => $reservation['account_id'],
+            'time'         => $startTime,  // 開始時刻
+            'end_time'     => $endTime,    // 終了時刻
             'resources'    => $resources,
             'accounts'     => $accounts,
             'reservations' => $reservations,
-            'selectedDate' => $selectedDate
+            'selectedDate' => $selectedDate,
+            'users'        => $users,
         ]);
     }
 
@@ -261,7 +316,7 @@ class ReservationController extends BaseController
         // 予約情報を取得
         $reservation = $reservationModel->find($id);
         if (!$reservation) {
-            return redirect()->route('reservation.schedule')->with('error', '指定された予約が見つかりませんでした。');
+            return redirect()->route('reservations.schedule')->with('error', '指定された予約が見つかりませんでした。');
         }
 
         // **入力データを取得**
@@ -276,8 +331,13 @@ class ReservationController extends BaseController
 
         // **管理者以外は過去日の予約を変更できない**
         if (!auth()->user()->inGroup('admin') && $date < date('Y-m-d')) {
-            return redirect()->route('reservation.schedule')->with('error', '過去日の予約は変更できません。');
+            return redirect()->route('reservations.schedule')->with('error', '過去日の予約は変更できません。');
         }
+
+        // **管理者が指定したユーザーを使用、それ以外は自分のID**
+        $user_id = (auth()->user()->inGroup('admin') && $this->request->getPost('user_id'))
+        ? $this->request->getPost('user_id')
+        : auth()->user()->id;
 
         // **デフォルト値を適用**
         $account_id = $this->request->getPost('account_id');
@@ -289,6 +349,7 @@ class ReservationController extends BaseController
         $data = [
             'resource_id' => $reservation['resource_id'],
             'account_id'  => $account_id,
+            'user_id'     => $user_id,
             'start_time'  => $startDateTime,
             'end_time'    => $endDateTime,
             'purpose'     => $this->request->getPost('purpose'),
@@ -302,7 +363,7 @@ class ReservationController extends BaseController
         // **予約情報の更新**
         $reservationModel->update($id, $data);
 
-        return redirect()->to(route_to('reservation.schedule', ['date' => $date]))
+        return redirect()->to(route_to('reservations.schedule', ['date' => $date]))
                         ->with('message', '予約が更新されました。');
     }
 
