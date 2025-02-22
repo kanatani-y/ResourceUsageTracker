@@ -26,6 +26,6 @@ return [
     'noDateFormat'                     => 'モデルクラス "{0}" に有効なdateFormatがありません。', // '"{0}" model class does not have a valid dateFormat.'
     'fieldNotExists'                   => 'フィールド "{0}" はありません。', // 'Field "{0}" not found.'
     'forEmptyInputGiven'               => 'フィールド "{0}" に空の文が与えられてます。', // 'Empty statement is given for the field "{0}"'
-    'forFindColumnHaveMultipleColumns' => 'カラム名には単一のカラムのみ使用可能です。', // 'Only single column allowed in Column name.'
+    'forFindColumnHaveMultipleColumns' => 'カラム名には単一のカラムのみ利用可能能です。', // 'Only single column allowed in Column name.'
     'methodNotAvailable'               => '"{0}" の "{1}" は使えません。これはクエリビルダーのメソッドです。', // 'You cannot use "{1}" in "{0}". This is a method of the Query Builder Class.'
 ];

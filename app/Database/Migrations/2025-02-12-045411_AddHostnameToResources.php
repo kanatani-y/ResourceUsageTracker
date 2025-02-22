@@ -17,6 +17,7 @@ class AddHostnameToResources extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
                 'null'       => false,
+                'unique'     => true,
                 'after'      => 'name', // `name` の後に配置
             ],
         ];

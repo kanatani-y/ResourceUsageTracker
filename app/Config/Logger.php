@@ -91,7 +91,7 @@ class Logger extends BaseConfig
                 'error',
                 'info',
                 'notice',
-                'warning',
+                'danger',
             ],
 
             /*
@@ -129,7 +129,7 @@ class Logger extends BaseConfig
         //      * The log levels that this handler will handle.
         //      */
         //     'handles' => ['critical', 'alert', 'emergency', 'debug',
-        //                   'error', 'info', 'notice', 'warning'],
+        //                   'error', 'info', 'notice', 'danger'],
         // ],
 
         /*
@@ -138,7 +138,7 @@ class Logger extends BaseConfig
          */
         // 'CodeIgniter\Log\Handlers\ErrorlogHandler' => [
         //     /* The log levels this handler can handle. */
-        //     'handles' => ['critical', 'alert', 'emergency', 'debug', 'error', 'info', 'notice', 'warning'],
+        //     'handles' => ['critical', 'alert', 'emergency', 'debug', 'error', 'info', 'notice', 'danger'],
         //
         //     /*
         //     * The message type where the error should go. Can be 0 or 4, or use the

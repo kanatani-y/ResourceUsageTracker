@@ -39,7 +39,7 @@
                                 aria-expanded="false">デバイス管理</a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="<?= route_to('admin.users.index') ?>">デバイス一覧</a></li>
-                                <li><a class="dropdown-item" href="<?= route_to('admin.register') ?>">デバイス登録</a></li>
+                                <li><a class="dropdown-item" href="<?= route_to('admin.users.register') ?>">デバイス登録</a></li>
                             </ul>
                         </li>
 
@@ -48,7 +48,7 @@
                                 aria-expanded="false">ユーザー管理</a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="<?= route_to('admin.users.index') ?>">ユーザ一覧</a></li>
-                                <li><a class="dropdown-item" href="<?= route_to('admin.register') ?>">ユーザ登録</a></li>
+                                <li><a class="dropdown-item" href="<?= route_to('admin.users.register') ?>">ユーザ登録</a></li>
                             </ul>
                         </li>
 

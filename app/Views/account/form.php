@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/layout') ?>
+<?= $this->extend('layouts/common') ?>
 
 <?= $this->section('title') ?><?= isset($account) ? 'アカウント編集' : 'アカウント登録' ?><?= $this->endSection() ?>
 
@@ -14,20 +14,8 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <?php if (session('errors')) : ?>
-                        <div class="alert alert-danger">
-                            <?php foreach (session('errors') as $error) : ?>
-                                <div><?= esc($error) ?></div>
-                            <?php endforeach ?>
-                        </div>
-                    <?php endif ?>
-
-                    <form action="<?= isset($account) ? route_to('account.update', $account['id']) : route_to('account.store') ?>"
-                        method="post" id="accountForm">
+                    <form action="<?= isset($account) && isset($account['id']) ? route_to('accounts.update', $account['id']) : route_to('accounts.store') ?>" method="post" id="accountForm">
                         <?= csrf_field() ?>
-                        <?php if (isset($account)): ?>
-                            <input type="hidden" name="_method" value="PUT">
-                        <?php endif; ?>
 
                         <div class="mb-3">
                             <label for="resource_id" class="form-label">リソース</label>
@@ -66,22 +54,33 @@
                             <div class="col-md-6 mb-3">
                                 <label for="connection_type" class="form-label">接続方法</label>
                                 <select name="connection_type" id="connection_type" class="form-select" required>
-                                    <option value="SSH" <?= (isset($account) && $account['connection_type'] == 'SSH') ? 'selected' : '' ?>>SSH</option>
                                     <option value="RDP" <?= (isset($account) && $account['connection_type'] == 'RDP') ? 'selected' : '' ?>>RDP</option>
+                                    <option value="SSH" <?= (isset($account) && $account['connection_type'] == 'SSH') ? 'selected' : '' ?>>SSH</option>
                                     <option value="VNC" <?= (isset($account) && $account['connection_type'] == 'VNC') ? 'selected' : '' ?>>VNC</option>
+                                    <option value="OTH" <?= (isset($account) && $account['connection_type'] == 'OTH') ? 'selected' : '' ?>>その他</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="port" class="form-label">ポート番号 (任意)</label>
                                 <input type="number" class="form-control" id="port" name="port"
-                                    value="<?= isset($account) ? esc($account['port']) : '' ?>" min="-1" max="65535"
-                                    oninput="validatePort()">
+                                    value="<?= isset($account) ? ($account['port'] == -1 ? '' : esc($account['port'])) : '' ?>"
+                                    min="1" max="65535" oninput="validatePort()">
                                 <div id="port-error" class="text-danger mt-1" style="display: none;">
-                                    ポート番号は -1 または 1～65535 の間で入力してください。
+                                    ポート番号は1～65535の間で入力してください。
                                 </div>
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">状態</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="available" <?= old('status', $account['status'] ?? '') === 'available' ? 'selected' : '' ?>>利用可能</option>
+                                    <option value="restricted" <?= old('status', $account['status'] ?? '') === 'restricted' ? 'selected' : '' ?>>利用禁止</option>
+                                    <option value="retired" <?= old('status', $account['status'] ?? '') === 'retired' ? 'selected' : '' ?>>廃止</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label for="description" class="form-label">説明 (任意)</label>
                             <textarea class="form-control" id="description" name="description" rows="3"
@@ -89,9 +88,15 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="<?= route_to('account.index') ?>" class="btn btn-secondary">
+                        <?php if (isset($selectedResource['id'])) : ?>
+                            <a href="<?= route_to('resources.show', $selectedResource['id']) ?>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
+                        <?php else : ?>
+                            <a href="<?= route_to('resources.index') ?>" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> 戻る
+                            </a>
+                        <?php endif; ?>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-save"></i> <?= isset($account) ? '更新' : '登録' ?>
                             </button>
@@ -108,7 +113,7 @@
         const port = document.getElementById("port").value;
         const errorDiv = document.getElementById("port-error");
 
-        if (port !== "" && (port < 1 || port > 65535) && port != -1) {
+        if (port !== "" && (port < 1 || port > 65535)) {
             errorDiv.style.display = "block";
         } else {
             errorDiv.style.display = "none";

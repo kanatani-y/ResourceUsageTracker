@@ -10,7 +10,7 @@ class ProfileController extends BaseController
 {
     public function settings()
     {
-        return view('profile/settings', ['user' => auth()->user()]);
+        return view('profiles/settings', ['user' => auth()->user()]);
     }
 
     public function update()
@@ -68,6 +68,6 @@ class ProfileController extends BaseController
             $userModel->update($user->id, $data);
         }
 
-        return redirect()->route('profile.settings')->with('message', 'プロフィールが更新されました。');
+        return redirect()->route('profiles.settings')->with('message', 'プロフィールが更新されました。');
     }
 }

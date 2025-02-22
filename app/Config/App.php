@@ -40,7 +40,7 @@ class App extends BaseConfig
      * something else. If you have configured your web server to remove this file
      * from your site URIs, set this variable to an empty string.
      */
-    public string $indexPage = 'index.php';
+    public string $indexPage = '';
 
     /**
      * --------------------------------------------------------------------------
@@ -66,7 +66,7 @@ class App extends BaseConfig
     |
     | This lets you specify which characters are permitted within your URLs.
     | When someone tries to submit a URL with disallowed characters they will
-    | get a warning message.
+    | get a danger message.
     |
     | As a security measure you are STRONGLY encouraged to restrict URLs to
     | as few characters as possible.

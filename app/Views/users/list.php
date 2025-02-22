@@ -1,18 +1,12 @@
-<?= $this->extend('layouts/layout') ?>
+<?= $this->extend('layouts/common') ?>
 
-<?= $this->section('title') ?>
-ユーザー一覧
-<?= $this->endSection() ?>
-
-<?= $this->section('pageStyles') ?>
-<!-- 必要に応じて追加のCSSをここに記述 -->
-<?= $this->endSection() ?>
+<?= $this->section('title') ?>ユーザー一覧<?= $this->endSection() ?>
 
 <?= $this->section('main') ?>
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-2">
         <h4 class="mb-0">ユーザー一覧</h4>
-        <a href="<?= route_to('admin.register') ?>" class="btn btn-sm btn-success float-end">
+        <a href="<?= route_to('admin.users.register') ?>" class="btn btn-sm btn-success float-end">
             <i class="bi bi-plus-lg"></i> 追加
         </a>
     </div>
@@ -24,7 +18,7 @@
                 <th>ユーザー名</th>
                 <th>氏名</th>
                 <th>種別</th>
-                <th>ステータス</th>
+                <th>状態</th>
                 <th>最終アクティブ日時</th>
                 <th>操作</th>
             </tr>
@@ -51,26 +45,36 @@
                     </td>
                     <td>
                         <?php if ($user->deleted_at): ?>
-                            <span class="badge bg-danger">削除済</span>
+                            <span class="badge bg-secondary">削除済</span>
                         <?php else: ?>
                             <?= $user->active ? '<span class="badge bg-success">有効</span>' : '<span class="badge bg-secondary">無効</span>' ?>
                         <?php endif; ?>
                     </td>
                     <td><?= $user->last_active ? $user->last_active->format('Y-m-d H:i:s') : '未アクティブ' ?></td>
                     <td class="text-nowrap" style="width: 150px;">
-                        <div class="btn-group" role="group">
-                            <?php if ($user->deleted_at): ?>
-                                <a href="<?= site_url('admin/users/restore/' . $user->id) ?>" class="btn btn-sm btn-warning">
+                        <div>
+                            <?php if ($user->deleted_at) : ?>
+                                <a href="<?= site_url('admin/users/restore/' . $user->id) ?>" class="btn btn-sm btn-warning" 
+                                    onclick="return confirm('対象を復元します。よろしいですか？')">
                                     <i class="bi bi-arrow-counterclockwise"></i> 復元
                                 </a>
-                            <?php elseif ($user->username !== 'admin' && $user->id !== auth()->user()->id): ?>
-                                <a href="<?= site_url('admin/users/edit/' . $user->id) ?>" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-pencil-square"></i> 編集
-                                </a>
-                                <a href="<?= site_url('admin/users/delete/' . $user->id) ?>" class="btn btn-sm btn-danger" 
-                                    onclick="return confirm('対象を論理削除します。よろしいですか？')">
-                                    <i class="bi bi-trash"></i> 削除
-                                </a>
+                            <?php else : ?>
+                                <?php if (!in_array('guest', $groups, true)): // ゲストでない場合のみ編集可能 ?>
+                                    <a href="<?= site_url('admin/users/edit/' . $user->id) ?>" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil-square"></i> 編集
+                                    </a>
+                                    <?php if ($user->active == 0 && $user->id !== auth()->user()->id) : ?>
+                                        <form action="<?= site_url('admin/users/delete/' . $user->id) ?>" method="post" class="d-inline" 
+                                            onsubmit="return confirm('対象を削除します。よろしいですか？');">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i> 削除
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span class="text-muted">変更不可</span>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </td>
@@ -79,8 +83,4 @@
         </tbody>
     </table>
 </div>
-<?= $this->endSection() ?>
-
-<?= $this->section('pageScripts') ?>
-<!-- 必要に応じて追加のJavaScriptをここに記述 -->
 <?= $this->endSection() ?>

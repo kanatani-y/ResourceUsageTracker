@@ -17,24 +17,26 @@ class AccountController extends BaseController
         $resource = $resource_id ? $resourceModel->find($resource_id) : null;
     
         if ($resource_id && !$resource) {
-            return redirect()->route('resource.index')->with('error', 'リソースが見つかりません。');
+            return redirect()->route('resources.index')->with('error', 'リソースが見つかりません。');
         }
     
         // アカウント取得
         if (isset($resource)) {
-            $accounts = $accountModel->where('resource_id', $resource_id)
+            $accounts = $accountModel->withDeleted()->where('resource_id', $resource_id)
                 ->orderBy("CASE WHEN deleted_at IS NULL THEN 0 ELSE 1 END ASC", '', false)
-                ->orderBy('id', 'ASC')
+                ->orderBy('accounts.status', 'ASC')
+                ->orderBy('accounts.username', 'ASC')
                 ->findAll();
         } else {
-            $accounts = $accountModel->select('accounts.*, resources.name as resource_name')
+            $accounts = $accountModel->withDeleted()->select('accounts.*, resources.name as resource_name')
                 ->join('resources', 'resources.id = accounts.resource_id', 'left')
                 ->orderBy("CASE WHEN accounts.deleted_at IS NULL THEN 0 ELSE 1 END ASC", '', false)
-                ->orderBy('accounts.id', 'ASC')
+                ->orderBy('accounts.status', 'ASC')
+                ->orderBy('accounts.username', 'ASC')
                 ->findAll();
         }
     
-        return view('account/account_list', [
+        return view('account/list', [
             'resource' => $resource,
             'accounts' => $accounts,
         ]);
@@ -50,10 +52,10 @@ class AccountController extends BaseController
             $selectedResource = $resourceModel->find($resource_id);
         }
     
-        return view('account/account_form', [
+        return view('account/form', [
             'resource_id'       => $resource_id,
             'resources'         => $resources,
-            'selectedResource'  => $selectedResource, // 明示的に変更
+            'selectedResource'  => $selectedResource,
         ]);
     }
 
@@ -61,28 +63,51 @@ class AccountController extends BaseController
     {
         $accountModel = new AccountModel();
     
-        // **バリデーションを適用**
+        // **バリデーション**
         if (!$accountModel->validate($this->request->getPost())) {
             return redirect()->back()->withInput()->with('errors', $accountModel->errors());
         }
     
-        // **データ準備（パスワードのエンコードは Model で行う）**
+        // **パスワードをエンコードして格納**
+        $password = $this->request->getPost('password');
+        $encodedPassword = !empty($password) ? base64url_encode($password) : null;
+    
         $data = [
             'resource_id'     => $this->request->getPost('resource_id'),
             'username'        => $this->request->getPost('username'),
-            'password'        => $this->request->getPost('password'), // そのまま渡す（Model でエンコード）
+            'password'        => $encodedPassword, // **明示的にエンコード**
             'connection_type' => $this->request->getPost('connection_type'),
-            'port'            => $this->request->getPost('port') !== '' ? $this->request->getPost('port') : -1, 
+            'port'            => $this->request->getPost('port') !== '' ? $this->request->getPost('port') : -1,
             'description'     => $this->request->getPost('description'),
+            'status'          => $this->request->getPost('status') ?? 'available',
         ];
     
-        // **データ保存**
         $accountModel->insert($data);
     
-        return redirect()->to(route_to('account.index', $data['resource_id']))
+        return redirect()->to(route_to('accounts.index', $data['resource_id']))
                         ->with('message', 'アカウントが登録されました。');
-    }    
+    }
     
+    public function edit($id)
+    {
+        $accountModel = new AccountModel();
+        $resourceModel = new ResourceModel();
+    
+        $account = $accountModel->find($id);
+        if (!$account) {
+            return redirect()->route('accounts.index')->with('error', 'アカウントが見つかりません。');
+        }
+    
+        $resources = $resourceModel->orderBy('name', 'ASC')->findAll();
+        $selectedResource = $resourceModel->find($account['resource_id']);
+    
+        return view('account/form', [
+            'account' => $account,
+            'resources' => $resources,
+            'selectedResource' => $selectedResource
+        ]);
+    }
+
     public function update($id)
     {
         $accountModel = new AccountModel();
@@ -98,6 +123,7 @@ class AccountController extends BaseController
             'connection_type' => $this->request->getPost('connection_type'),
             'port'            => $this->request->getPost('port') !== '' ? $this->request->getPost('port') : -1, 
             'description'     => $this->request->getPost('description'),
+            'status'          => $this->request->getPost('status'),
         ];
     
         // パスワード変更があれば更新
@@ -107,26 +133,55 @@ class AccountController extends BaseController
     
         $accountModel->update($id, $data);
     
-        return redirect()->to(route_to('account.index', $account['resource_id']))
+        return redirect()->to(route_to('accounts.index', $account['resource_id']))
                         ->with('message', 'アカウントが更新されました。');
     }
-    
 
     public function delete($id)
     {
         $accountModel = new AccountModel();
         $account = $accountModel->find($id);
+    
+        if (!$account) {
+            return redirect()->route('accounts.index')->with('error', 'アカウントが見つかりません。');
+        }
+    
+        // **管理者のみ削除可能**
+        if (!auth()->user()->inGroup('admin')) {
+            return redirect()->route('accounts.index')->with('error', '操作の権限がありません。');
+        }
+    
+        // **リソースのステータスが "retired"（廃止）でない場合は削除不可**
+        if ($account['status'] !== 'retired') {
+            return redirect()->route('accounts.index')->with('error', '廃止されたアカウントのみ削除できます。');
+        }
+    
+        // **削除処理（論理削除）**
+        $accountModel->delete($id);
+    
+        return redirect()->route('accounts.index')->with('message', 'アカウントが削除されました。');
+    }
+
+    public function restore($id)
+    {
+        $accountModel = new AccountModel();
+        
+        // **削除済みのリソースを取得**
+        $account = $accountModel->onlyDeleted()->find($id);
 
         if (!$account) {
-            return redirect()->back()->with('error', 'アカウントが見つかりません。');
+            return redirect()->route('accounts.index')->with('error', 'アカウントが見つかりません。');
         }
-
-        $updateData = ['deleted_at' => date('Y-m-d H:i:s')];
-
-        if ($accountModel->update($id, $updateData)) {
-            return redirect()->back()->with('message', 'アカウントが削除されました。');
+    
+        // **管理者のみ復元可能**
+        if (!auth()->user()->inGroup('admin')) {
+            return redirect()->route('accounts.index')->with('error', '操作の権限がありません。');
         }
-
-        return redirect()->back()->with('error', 'アカウントの削除に失敗しました。');
+    
+        // **復元処理**
+        $account['deleted_at'] = null;
+        $accountModel->save($account);
+    
+        return redirect()->route('accounts.index')->with('message', 'リソースが復元されました。');
     }
 }

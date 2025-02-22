@@ -49,10 +49,10 @@ class ResourceModel extends Model
             ]
         ],
         'type' => [
-            'rules' => 'required|in_list[server,network,storage,other]',
+            'rules' => 'required|in_list[PC, Server, Network, Storage, Other]',
             'label' => 'リソース種別',
             'errors' => [
-                'in_list' => 'リソース種別は「server, network, storage, other」のいずれかを選択してください。',
+                'in_list' => 'リソース種別は「PC, Server, Network, Storage, Other」のいずれかを選択してください。',
             ]
         ],
         'os' => [
@@ -68,18 +68,18 @@ class ResourceModel extends Model
             'label' => 'CPU コア数'
         ],
         'memory' => [
-            'rules' => 'permit_empty|integer|greater_than[0]',
+            'rules' => 'permit_empty',
             'label' => 'メモリ (GB)'
         ],
         'storage' => [
-            'rules' => 'permit_empty|integer|greater_than[0]',
-            'label' => 'ストレージ (GB)'
+            'rules' => 'permit_empty',
+            'label' => 'ストレージ'
         ],
         'status' => [
-            'rules' => 'permit_empty|in_list[active,inactive]',
+            'rules' => 'permit_empty|in_list[available, restricted, retired]',
             'label' => 'ステータス',
             'errors' => [
-                'in_list' => 'ステータスは「active」または「inactive」のみ選択できます。',
+                'in_list' => 'ステータスは「available, restricted, retired」のいずれかのみ選択できます。',
             ]
         ],
         'location' => [

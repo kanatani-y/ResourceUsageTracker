@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/layout') ?>
+<?= $this->extend('layouts/common') ?>
 
 <?= $this->section('title') ?><?= lang('Auth.login') ?> <?= $this->endSection() ?>
 
@@ -9,29 +9,10 @@
             <div class="card-body">
                 <h5 class="card-title mb-5"><?= lang('Auth.login') ?></h5>
 
-                <?php if (session('error') !== null) : ?>
-                    <div class="alert alert-danger" role="alert"><?= session('error') ?></div>
-                <?php elseif (session('errors') !== null) : ?>
-                    <div class="alert alert-danger" role="alert">
-                        <?php if (is_array(session('errors'))) : ?>
-                            <?php foreach (session('errors') as $error) : ?>
-                                <?= $error ?>
-                                <br>
-                            <?php endforeach ?>
-                        <?php else : ?>
-                            <?= session('errors') ?>
-                        <?php endif ?>
-                    </div>
-                <?php endif ?>
-
-                <?php if (session('message') !== null) : ?>
-                <div class="alert alert-success" role="alert"><?= session('message') ?></div>
-                <?php endif ?>
-
                 <form action="<?= url_to('login') ?>" method="post">
                     <?= csrf_field() ?>
 
-                    <!-- Email -->
+                    <!-- Username -->
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" name="username" placeholder="<?= lang('Auth.username') ?>" value="<?= old('username') ?>" required>
                         <label for="floatingUsernameInput"><?= lang('Auth.username') ?></label>
@@ -55,6 +36,13 @@
 
                     <div class="d-grid col-12 col-md-8 mx-auto m-3">
                         <button type="submit" class="btn btn-primary btn-block"><?= lang('Auth.login') ?></button>
+                    </div>
+
+                    <!-- ゲストログインボタン -->
+                    <div class="d-grid col-12 col-md-8 mx-auto m-3">
+                        <a href="<?= url_to('guest.login') ?>" class="btn btn-outline-secondary btn-block">
+                            <i class="bi bi-person-circle"></i> ゲストとしてログイン
+                        </a>
                     </div>
 
                     <?php if (setting('Auth.allowMagicLinkLogins')) : ?>

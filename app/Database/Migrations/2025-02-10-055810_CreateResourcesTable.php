@@ -9,7 +9,7 @@ class CreateResourcesTable extends Migration
     public function up()
     {
         $this->forge->addField([
-            'id'          => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
+            'id'          => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
             'name'        => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => false],
             'type'        => ['type' => 'ENUM', 'constraint' => ['PC', 'Server', 'Network', 'Storage', 'Other'], 'default' => 'Other', 'null' => false],
             'os'          => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
@@ -18,7 +18,7 @@ class CreateResourcesTable extends Migration
             'cpu'         => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
             'memory'      => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true],
             'storage'     => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
-            'status'      => ['type' => 'ENUM', 'constraint' => ['available', 'in_use', 'maintenance', 'retired'], 'default' => 'available'],
+            'status'      => ['type' => 'ENUM', 'constraint' => ['available', 'restricted', 'retired'], 'default' => 'available'],
             'location'    => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'description' => ['type' => 'TEXT', 'null' => true],
             'created_at' => ['type' => 'TIMESTAMP', 'null' => true],

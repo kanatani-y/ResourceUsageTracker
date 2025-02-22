@@ -10,10 +10,10 @@ class CreateAccountsTable extends Migration
     {
         $this->forge->addField([
             'id'              => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
-            'resource_id'     => ['type' => 'INT', 'constraint' => 11, 'null' => false],
+            'resource_id'     => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true],
             'username'        => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => false],
             'password'        => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => false],
-            'connection_type' => ['type' => 'ENUM', 'constraint' => ['SSH', 'RDP', 'VNC'], 'default' => 'SSH'],
+            'connection_type' => ['type' => 'ENUM', 'constraint' => ['SSH', 'RDP', 'VNC', 'OTH'], 'default' => 'RDP'],
             'port'            => ['type' => 'INT', 'constraint' => 5, 'null' => true],
             'description'     => ['type' => 'TEXT', 'null' => true],
             'created_at' => ['type' => 'TIMESTAMP', 'null' => true],
