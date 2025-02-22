@@ -122,7 +122,6 @@
                             </div>
                         <?php else: ?>
                             <input type="hidden" name="user_id" value="<?= auth()->user()->id ?>">
-                            <p class="form-control-plaintext"><?= esc(auth()->user()->fullname ?? auth()->user()->username) ?></p>
                         <?php endif; ?>
 
                         <div class="row">
@@ -133,14 +132,24 @@
                             </div>
                         </div>
 
+                        
                         <!-- 予約ボタン -->
                         <div class="d-flex justify-content-between">
                             <a href="<?= site_url('reservations') ?>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> <?= isset($reservation) ? '更新' : '登録' ?>
-                            </button>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> <?= isset($reservation) ? '更新' : '登録' ?>
+                                </button>
+
+                                <?php if (isset($reservation) && (auth()->user()->inGroup('admin') || $reservation['user_id'] == auth()->user()->id)) : ?>
+                                    <button type="button" class="btn btn-danger" id="delete-reservation-btn">
+                                        <i class="bi bi-trash"></i> 削除
+                                    </button>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -174,6 +183,28 @@
 
 
     document.addEventListener("DOMContentLoaded", function () {
+
+        const deleteBtn = document.getElementById("delete-reservation-btn");
+        if (deleteBtn) {
+            deleteBtn.addEventListener("click", function () {
+                if (confirm("本当に削除しますか？")) {
+                    const form = document.createElement("form");
+                    form.method = "POST";
+                    form.action = "<?= isset($reservation['id']) ? route_to('reservations.delete', $reservation['id']) : '' ?>";
+
+                    // CSRFトークンを追加
+                    const csrfInput = document.createElement("input");
+                    csrfInput.type = "hidden";
+                    csrfInput.name = "<?= csrf_token() ?>";
+                    csrfInput.value = "<?= csrf_hash() ?>";
+                    form.appendChild(csrfInput);
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+        
         // **アカウントリストを更新**
         function updateAccountSelection() {
             const resourceId = resourceSelect.value;

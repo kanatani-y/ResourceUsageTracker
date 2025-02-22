@@ -17,8 +17,8 @@
         <table class="table table-bordered table-hover text-center align-middle">
             <thead class="table-light sticky-top">
                 <tr>
-                    <th class="bg-primary text-white" colspan="2">リソース</th>
-                    <th class="bg-primary text-white" colspan="2">アカウント</th>
+                    <th class="bg-secondary text-white" colspan="2">リソース</th>
+                    <th class="bg-secondary text-white" colspan="2">アカウント</th>
                     <?php for ($hour = 9; $hour <= 17; $hour++): ?>
                         <th class="bg-primary text-white"><?= $hour ?>:00</th>
                     <?php endfor; ?>
@@ -55,7 +55,7 @@
                             <?php
                                 switch ($resource['status']) {
                                     case 'available':
-                                        echo '<span class="badge bg-success">利用可能</span>';
+                                        echo '<span class="badge bg-info">利用可能</span>';
                                         break;
                                     case 'restricted':
                                         echo '<span class="badge bg-danger">利用禁止</span>';
@@ -77,7 +77,7 @@
                         <?php if ($account['username'] === 'なし'): ?>
                             <span>-</span>
                         <?php elseif ($account['status'] === 'available'): ?>
-                            <span class="badge bg-success">利用可能</span>
+                            <span class="badge bg-info">利用可能</span>
                         <?php elseif ($account['status'] === 'restricted'): ?>
                             <span class="badge bg-danger">利用禁止</span>
                         <?php elseif ($account['status'] === 'retired'): ?>

@@ -15,7 +15,8 @@ class ResourceController extends BaseController
         // 削除済みのリソースも含めて取得し、削除済みを最下部に表示
         $resources = $ResourceModel->withDeleted()
             ->orderBy("CASE WHEN deleted_at IS NULL THEN 0 ELSE 1 END ASC", '', false)
-            ->orderBy("id ASC", '', false)
+            ->orderBy('status', 'ASC')
+            ->orderBy('name', 'ASC')
             ->findAll();
 
         return view('resources/list', ['resources' => $resources]);
@@ -35,8 +36,8 @@ class ResourceController extends BaseController
         }
     
         $accounts = $accountModel->where('resource_id', $id)
-            ->orderBy("CASE WHEN deleted_at IS NULL THEN 0 ELSE 1 END ASC", '', false)
-            ->orderBy('id', 'ASC')
+            ->orderBy('status', 'ASC')
+            ->orderBy('username', 'ASC')
             ->findAll();
     
         return view('resources/show', [
@@ -182,27 +183,39 @@ class ResourceController extends BaseController
     {
         $ResourceModel = new ResourceModel();
         $resource = $ResourceModel->find($id);
-
+    
         if (!$resource) {
             return redirect()->route('resources.index')->with('error', 'リソースが見つかりません。');
         }
-
-        $ResourceModel->update($id, ['deleted_at' => date('Y-m-d H:i:s')]);
-
+    
+        // **リソースのステータスが "retired"（廃止）でない場合は削除不可**
+        if ($resource['status'] !== 'retired') {
+            return redirect()->route('resources.index')->with('error', '廃止されたリソースのみ削除できます。');
+        }
+    
+        // **削除処理（論理削除）**
+        $ResourceModel->delete($id);
+    
         return redirect()->route('resources.index')->with('message', 'リソースが削除されました。');
     }
+    
 
     public function restore($id)
     {
         $ResourceModel = new ResourceModel();
+        
+        // **削除済みのリソースを取得**
         $resource = $ResourceModel->onlyDeleted()->find($id);
 
         if (!$resource) {
             return redirect()->route('resources.index')->with('error', 'リソースが見つかりません。');
         }
-
-        $ResourceModel->update($id, ['deleted_at' => null]);
-
+    
+        // **復元処理**
+        $resource['deleted_at'] = null;
+        $ResourceModel->save($resource);
+    
         return redirect()->route('resources.index')->with('message', 'リソースが復元されました。');
     }
+    
 }

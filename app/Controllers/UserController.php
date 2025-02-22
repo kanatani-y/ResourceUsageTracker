@@ -125,22 +125,29 @@ class UserController extends BaseController
     {
         $db = \Config\Database::connect();
         $users = model(UserModel::class);
+        $userIdentityModel = new UserIdentityModel();
         $user = $users->find($id);
     
         if (!$user) {
             return redirect()->route('admin.users.index')->with('error', 'ユーザーが見つかりません。');
         }
     
-        // **Administrator の場合は role と active を変更不可にする**
-        if ($user->username === 'admin') {
-            if ($this->request->getPost('role') !== 'admin' || $this->request->getPost('active') !== (string) $user->active) {
-                return redirect()->back()->with('error', 'Administrator の役割やアカウント状態は変更できません。');
+        // **ログインユーザが自身の "active" や "group" を変更できないようにする**
+        if (auth()->user()->id == $id) {
+            if ($this->request->getPost('active') !== (string) $user->active) {
+                return redirect()->back()->with('error', '自身のアカウントの有効/無効を変更することはできません。');
             }
+        }
+    
+        // **管理者のグループ変更を禁止**
+        if ($user->inGroup('admin') && $this->request->getPost('role') !== 'admin') {
+            return redirect()->back()->with('error', '管理者のグループを変更することはできません。');
         }
     
         // **更新データの作成**
         $updateData = [
             'fullname' => $this->request->getPost('fullname'),
+            'email'    => $this->request->getPost('email'),
         ];
     
         // **Administrator 以外は active を更新可能**
@@ -149,9 +156,16 @@ class UserController extends BaseController
         }
     
         // **パスワード変更がある場合のみ更新**
-        $password = $this->request->getPost('password');
-        if (!empty($password)) {
-            $updateData['password'] = password_hash($password, PASSWORD_DEFAULT);
+        $newPassword = $this->request->getPost('password');
+        if (!empty($newPassword)) {
+            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+    
+            // `auth_identities` の `password_hash` を更新
+            $userIdentityModel
+                ->where('user_id', $user->id)
+                ->where('type', 'email_password')
+                ->set(['secret2' => $hashedPassword])
+                ->update();
         }
     
         // **トランザクション開始**
@@ -201,6 +215,11 @@ class UserController extends BaseController
             return redirect()->route('admin.users.index')->with('error', 'ユーザーが見つかりませんでした。');
         }
     
+        // **ログイン中の管理者自身を削除不可にする**
+        if (auth()->user()->id == $id) {
+            return redirect()->route('admin.users.index')->with('error', '自身のアカウントは削除できません。');
+        }
+
         // 論理削除（deleted_at に現在日時をセット）
         if ($users->delete($id)) {
             return redirect()->route('admin.users.index')->with('message', 'ユーザーが正常に削除されました。');

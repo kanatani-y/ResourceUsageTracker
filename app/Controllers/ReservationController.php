@@ -181,13 +181,6 @@ class ReservationController extends BaseController
                 ->with('message', '予約を追加しました。');
     }
 
-    public function delete($id)
-    {
-        $reservationModel = new ReservationModel();
-        $reservationModel->delete($id);
-        return redirect()->route('reservations.schedule')->with('message', '予約を削除しました。');
-    }
-
     public function schedule()
     {
         $resourceModel = new ResourceModel();
@@ -253,6 +246,11 @@ class ReservationController extends BaseController
             return redirect()->route('reservations.schedule')->with('error', '指定された予約が見つかりませんでした。');
         }
     
+        // **管理者を除外し、予約者本人以外のアクセスを禁止**
+        if (!auth()->user()->inGroup('admin') && $reservation['user_id'] != auth()->user()->id) {
+            return redirect()->route('reservations.schedule')->with('error', 'この予約を編集する権限がありません。');
+        }
+
         $account = $accountModel->find($reservation['account_id']);
     
         // 利用禁止または廃止のアカウントは予約不可
@@ -365,6 +363,23 @@ class ReservationController extends BaseController
 
         return redirect()->to(route_to('reservations.schedule', ['date' => $date]))
                         ->with('message', '予約が更新されました。');
+    }
+
+    public function delete($id)
+    {
+        $reservationModel = new ReservationModel();
+        $reservation = $reservationModel->find($id);
+    
+        if (!$reservation) {
+            return redirect()->route('reservations.schedule')->with('error', '予約が見つかりません。');
+        }
+        // **管理者または予約本人のみ削除可能**
+        if (!auth()->user()->inGroup('admin') && $reservation['user_id'] != auth()->user()->id) {
+            return redirect()->route('reservations.schedule')->with('error', 'この予約を削除する権限がありません。');
+        }
+    
+        $reservationModel->delete($id, true);
+        return redirect()->route('reservations.schedule')->with('message', '予約を削除しました。');
     }
 
     public function getReservations()

@@ -47,10 +47,7 @@
                                 <?php
                                 switch ($resource['status']) {
                                     case 'available':
-                                        echo '<span class="badge bg-success">利用可能</span>';
-                                        break;
-                                    case 'in_use':
-                                        echo '<span class="badge bg-danger">使用中</span>';
+                                        echo '<span class="badge bg-info">利用可能</span>';
                                         break;
                                     case 'restricted':
                                         echo '<span class="badge bg-danger">利用禁止</span>';
@@ -74,10 +71,14 @@
                                     <a href="<?= route_to('resources.edit', $resource['id']) ?>" class="btn btn-sm btn-primary">
                                         <i class="bi bi-pencil-square"></i> 編集
                                     </a>
-                                    <a href="<?= route_to('resources.delete', $resource['id']) ?>" class="btn btn-sm btn-danger" 
-                                        onclick="return confirm('対象を論理削除します。よろしいですか？')">
-                                        <i class="bi bi-trash"></i> 削除
-                                    </a>
+                                    <?php if ($resource['status'] === 'retired') : ?>
+                                        <form action="<?= route_to('resources.delete', $resource['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('対象を削除します。よろしいですか？');">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-sm btn-danger <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
+                                                <i class="bi bi-trash"></i> 削除
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </td>

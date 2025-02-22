@@ -66,7 +66,7 @@
                                     <?php
                                     switch ($resource['status']) {
                                         case 'available':
-                                            echo '<span class="badge bg-success">利用可能</span>';
+                                            echo '<span class="badge bg-info">利用可能</span>';
                                             break;
                                         case 'restricted':
                                             echo '<span class="badge bg-danger">利用禁止</span>';
@@ -122,7 +122,7 @@
                                         <?php
                                             switch ($account['status']) {
                                                 case 'available':
-                                                    echo '<span class="badge bg-success">利用可能</span>';
+                                                    echo '<span class="badge bg-info">利用可能</span>';
                                                     break;
                                                 case 'restricted':
                                                     echo '<span class="badge bg-danger">利用禁止</span>';

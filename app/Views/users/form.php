@@ -3,6 +3,8 @@
 <?= $this->section('title') ?><?= isset($user) ? 'ユーザー編集' : 'ユーザー登録' ?><?= $this->endSection() ?>
 
 <?= $this->section('main') ?>
+<?php $loggedInUser = auth()->user(); ?>
+
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-10">
@@ -29,14 +31,14 @@
                             <div class="col-md-6 mb-3">
                                 <label for="username" class="form-label">ユーザー名</label>
                                 <input type="text" class="form-control" id="username" name="username"
-                                    value="<?= old('username', $user->username ?? '') ?>" required maxlength="50" style="ime-mode:disabled;" inputmode="latin"
-                                    pattern="^[a-zA-Z0-9._@-]+$" title="ユーザー名は半角英数字、ドット、アンダースコア、ハイフン、@ のみ利用可能能">
+                                    value="<?= old('username', $user->username ?? '') ?>" required maxlength="20" style="ime-mode:disabled;" inputmode="latin"
+                                    pattern="^[a-zA-Z0-9._@-]+$" title="ユーザー名は半角英数字、ドット、アンダースコア、ハイフン、@ のみ利用可能">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="fullname" class="form-label">氏名</label>
                                 <input type="text" class="form-control" id="fullname" name="fullname"
                                     value="<?= old('fullname', $user->fullname ?? '') ?>" required
-                                    maxlength="60" pattern="^[^\s ]+[ ][^\s ]+$"
+                                    maxlength="20" pattern="^[^\s ]+[ ][^\s ]+$"
                                     title="姓と名の間に半角スペースを1つ入れてください">
                             </div>
                         </div>
@@ -69,26 +71,35 @@
                             <!-- 役割（Role） -->
                             <div class="col-md-6 mb-3">
                                 <label for="role" class="form-label">役割</label>
-                                <select class="form-select" id="role" name="role" <?= isset($user) && $user->inGroup('admin') ? 'disabled' : '' ?> required>
+                                <select class="form-select" id="role" name="role" 
+                                    <?= (isset($user) && $user->inGroup('admin')) || (isset($user) && $user->id == $loggedInUser->id) ? 'disabled' : '' ?> required>
                                     <option value="user" <?= isset($user) && $user->inGroup('user') ? 'selected' : '' ?>>一般ユーザー</option>
                                     <option value="admin" <?= isset($user) && $user->inGroup('admin') ? 'selected' : '' ?>>管理者</option>
                                     <option value="guest" <?= isset($user) && $user->inGroup('guest') ? 'selected' : '' ?>>ゲスト</option>
                                 </select>
+                                <?php if ((isset($user) && $user->inGroup('admin')) || (isset($user) && $user->id == $loggedInUser->id)) : ?>
+                                    <input type="hidden" name="role" value="<?= $user->inGroup('admin') ? 'admin' : '' ?>">
+                                <?php endif; ?>
                             </div>
 
-                            <!-- アカウント状態 -->
+                            <!-- 状態 -->
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">アカウント状態</label>
+                                <label class="form-label">ユーザ状態</label>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="active" id="activeYes" value="1" 
-                                        <?= isset($user) && $user->active ? 'checked' : '' ?>>
+                                        <?= isset($user) && $user->active ? 'checked' : '' ?>
+                                        <?= isset($user) && $user->id == $loggedInUser->id ? 'disabled' : '' ?>>
                                     <label class="form-check-label" for="activeYes">有効</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="active" id="activeNo" value="0" 
-                                        <?= isset($user) && !$user->active ? 'checked' : '' ?>>
+                                        <?= isset($user) && !$user->active ? 'checked' : '' ?>
+                                        <?= isset($user) && $user->id == $loggedInUser->id ? 'disabled' : '' ?>>
                                     <label class="form-check-label" for="activeNo">無効</label>
                                 </div>
+                                <?php if (isset($user) && $user->id == $loggedInUser->id) : ?>
+                                    <input type="hidden" name="active" value="<?= $user->active ?>">
+                                <?php endif; ?>
                             </div>
                         </div>
 

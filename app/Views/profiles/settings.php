@@ -29,7 +29,7 @@
                                 <label for="fullname" class="form-label">氏名</label>
                                 <input type="text" class="form-control" id="fullname" name="fullname"
                                     value="<?= old('fullname', $user->fullname ?? '') ?>" required
-                                    maxlength="60" pattern="^[^\s ]+[ ][^\s ]+$"
+                                    maxlength="20" pattern="^[^\s ]+[ ][^\s ]+$"
                                     title="姓と名の間に半角スペースを1つ入れてください">
                             </div>
                             <div class="col-md-6 mb-3">

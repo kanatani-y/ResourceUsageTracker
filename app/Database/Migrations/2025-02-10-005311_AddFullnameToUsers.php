@@ -11,7 +11,7 @@ class AddFullnameToUsers extends Migration
         $this->forge->addColumn('users', [
             'fullname' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '255',
+                'constraint' => '20',
                 'null'       => false,
                 'default'    => '',
                 'after'      => 'username',
