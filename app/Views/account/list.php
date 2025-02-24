@@ -26,9 +26,19 @@
         <tbody>
             <?php foreach ($accounts as $account) : ?>
                 <tr class="<?= $account['deleted_at'] ? 'text-muted' : '' ?>">
-                    <td>
+                    <td class="<?= $account['deleted_at'] ? 'bg-secondary-subtle' : '' ?>">
                         <a href="<?= site_url('resources/show/' . $account['resource_id']) ?>" class="text-decoration-none">
-                            <i class="bi bi-server"></i> <?= esc($account['resource_name'] ?? '不明') ?>
+                            <?php
+                            $resourceIcons = [
+                                'PC'      => '<i class="bi bi-laptop"></i>',      // PC
+                                'Server'  => '<i class="bi bi-hdd-rack"></i>',   // サーバー
+                                'Network' => '<i class="bi bi-router"></i>',     // ネットワーク
+                                'Storage' => '<i class="bi bi-hdd"></i>',        // ストレージ
+                                'Other'   => '<i class="bi bi-question-circle"></i>', // その他
+                            ];
+                            echo $resourceIcons[$account['resource_type']] ?? '<i class="bi bi-question-circle"></i> ';
+                            ?>
+                            <?= esc($account['resource_name'] ?? '不明') ?>
                         </a>
                     </td>
                     <td><?= esc($account['account_name']) ?></td>
