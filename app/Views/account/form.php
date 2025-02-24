@@ -14,7 +14,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="<?= isset($account) && isset($account['id']) ? route_to('accounts.update', $account['id']) : route_to('accounts.store') ?>" method="post" id="accountForm">
+                    <form action="<?= isset($account) && isset($account['id']) ? site_url('accounts/update/' . $account['id']) : site_url('accounts/store') ?>" method="post" id="accountForm">
                         <?= csrf_field() ?>
 
                         <div class="mb-3">
@@ -37,7 +37,7 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="username" class="form-label">ユーザー名</label>
+                                <label for="username" class="form-label">アカウント名</label>
                                 <input type="text" class="form-control" id="username" name="username"
                                     value="<?= isset($account) ? esc($account['username']) : '' ?>" required
                                     maxlength="50" pattern="^[a-zA-Z0-9_.-]+$"
@@ -88,19 +88,25 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                        <?php if (isset($selectedResource['id'])) : ?>
-                            <a href="<?= route_to('resources.show', $selectedResource['id']) ?>" class="btn btn-secondary">
+                            <?php
+                            // リファラーを取得
+                            $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+                            $showResourceURL = site_url('resources/show/' . ($selectedResource['id'] ?? ''));
+                            $defaultBackURL = site_url('accounts'); // デフォルトはアカウント一覧
+
+                            // リファラーが `resources/show/` を含む場合はリソース詳細に戻る
+                            $backURL = (strpos($referrer, 'resources/show/') !== false) ? $showResourceURL : $defaultBackURL;
+                            ?>
+
+                            <a href="<?= $backURL ?>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
-                        <?php else : ?>
-                            <a href="<?= route_to('resources.index') ?>" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> 戻る
-                            </a>
-                        <?php endif; ?>
+
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-save"></i> <?= isset($account) ? '更新' : '登録' ?>
                             </button>
                         </div>
+
                     </form>
                 </div>
             </div>

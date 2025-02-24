@@ -16,8 +16,8 @@ $routes->group('admin', ['filter' => 'group:admin'], function ($routes) {
     $routes->get('users/edit/(:num)', 'UserController::edit/$1', ['as' => 'admin.users.edit']);
     $routes->post('users/update/(:num)', 'UserController::update/$1', ['as' => 'admin.users.update']);
     $routes->get('users/restore/(:num)', 'UserController::restore/$1', ['as' => 'admin.users.restore']);
-    $routes->get('register', 'UserController::create', ['as' => 'admin.users.register']);
-    $routes->post('register', 'UserController::store', ['as' => 'admin.users.store']);
+    $routes->get('users/register', 'UserController::create', ['as' => 'admin.users.register']);
+    $routes->post('users/register', 'UserController::store', ['as' => 'admin.users.store']);
     $routes->post('users/delete/(:num)', 'UserController::delete/$1', ['as' => 'admin.users.delete']);
 });
 

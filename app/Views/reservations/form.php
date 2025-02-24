@@ -13,7 +13,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="<?= isset($reservation) ? route_to('reservations.update', $reservation['id']) : route_to('reservations.store') ?>" method="post">
+                    <form action="<?= isset($reservation) ? site_url('reservations/update/' . $reservation['id']) : site_url('reservations/store') ?>" method="post">
                         <?= csrf_field() ?>
 
                         <div class="mb-3">
@@ -28,7 +28,6 @@
                                 <?php endforeach; ?>
                             </select>
 
-                            <!-- リソース変更不可のため、編集時は hidden input で `resource_id` を送信 -->
                             <?php if (isset($reservation)): ?>
                                 <input type="hidden" name="resource_id" value="<?= esc($reservation['resource_id']) ?>">
                             <?php endif; ?>
@@ -132,10 +131,18 @@
                             </div>
                         </div>
 
-                        
+                        <?php
+                        // リファラーを取得
+                        $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+                        $defaultBackURL = site_url('reservations'); // デフォルトは予約一覧
+
+                        // リファラーが空でなく、かつ同じドメインのURLの場合のみ使用
+                        $backURL = (!empty($referrer) && strpos($referrer, site_url()) === 0) ? $referrer : $defaultBackURL;
+                        ?>
+
                         <!-- 予約ボタン -->
                         <div class="d-flex justify-content-between">
-                            <a href="<?= site_url('reservations') ?>" class="btn btn-secondary">
+                            <a href="<?= esc($backURL) ?>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
 
@@ -145,7 +152,12 @@
                                 </button>
 
                                 <?php if (isset($reservation) && (auth()->user()->inGroup('admin') || $reservation['user_id'] == auth()->user()->id)) : ?>
-                                    <button type="button" class="btn btn-danger" id="delete-reservation-btn">
+                                    <button type="button" class="btn btn-sm btn-danger <?= $reservation['deleted_at'] ? 'disabled' : '' ?>"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#confirmModal"
+                                        data-action="<?= site_url('reservations/delete/' . $reservation['id']) ?>"
+                                        data-title="削除確認"
+                                        data-message="本当にこの予約を削除しますか？">
                                         <i class="bi bi-trash"></i> 削除
                                     </button>
                                 <?php endif; ?>
@@ -183,28 +195,6 @@
 
 
     document.addEventListener("DOMContentLoaded", function () {
-
-        const deleteBtn = document.getElementById("delete-reservation-btn");
-        if (deleteBtn) {
-            deleteBtn.addEventListener("click", function () {
-                if (confirm("本当に削除しますか？")) {
-                    const form = document.createElement("form");
-                    form.method = "POST";
-                    form.action = "<?= isset($reservation['id']) ? route_to('reservations.delete', $reservation['id']) : '' ?>";
-
-                    // CSRFトークンを追加
-                    const csrfInput = document.createElement("input");
-                    csrfInput.type = "hidden";
-                    csrfInput.name = "<?= csrf_token() ?>";
-                    csrfInput.value = "<?= csrf_hash() ?>";
-                    form.appendChild(csrfInput);
-
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            });
-        }
-        
         // **アカウントリストを更新**
         function updateAccountSelection() {
             const resourceId = resourceSelect.value;

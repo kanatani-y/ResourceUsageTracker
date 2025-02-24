@@ -14,7 +14,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="<?= isset($resource) ? route_to('resources.update', $resource['id']) : route_to('resources.store') ?>" method="post">
+                    <form action="<?= isset($resource) ? site_url('resources/update/' . $resource['id']) : site_url('resources/store') ?>" method="post">
                         <?= csrf_field() ?>
 
                         <div class="row">
@@ -29,7 +29,7 @@
                             <div class="col-md-6 mb-3">
                                 <label for="hostname" class="form-label">ホスト名</label>
                                 <input type="text" class="form-control" id="hostname" name="hostname" 
-                                    pattern="^[a-zA-Z0-9._-]+$" title="半角英数字、ドット、ハイフン、アンダースコアのみ利用可能能"
+                                    pattern="^[a-zA-Z0-9._-]+$" title="半角英数字、ドット、ハイフン、アンダースコアのみ利用可能"
                                     value="<?= old('hostname', $resource['hostname'] ?? '') ?>" required maxlength="50">
                             </div>
                         </div>
@@ -114,9 +114,18 @@
                             <textarea class="form-control" id="description" name="description" rows="3"><?= old('description', $resource['description'] ?? '') ?></textarea>
                         </div>
 
+                        <?php
+                        // リファラーを取得
+                        $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+                        $showResourceURL = isset($resource['id']) ? site_url('resources/show/' . $resource['id']) : site_url('resources');
+                        $defaultBackURL = site_url('resources'); // デフォルトはリソース一覧
+
+                        // リファラーが `resources/show/` を含む場合はリソース詳細に戻る
+                        $backURL = (strpos($referrer, 'resources/show/') !== false) ? $showResourceURL : $defaultBackURL;
+                        ?>
                         <!-- ボタン -->
                         <div class="d-flex justify-content-between">
-                            <a href="<?= site_url('resources') ?>" class="btn btn-secondary">
+                            <a href="<?= esc($backURL) ?>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
                             <button type="submit" class="btn btn-primary">

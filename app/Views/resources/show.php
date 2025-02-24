@@ -27,7 +27,21 @@
                         </tr>
                         <tr>
                             <th class="bg-light">種類</th>
-                            <td><?= esc($resource['type']) ?></td>
+                            <td>
+                                <?php
+                                // リソースの種類に応じたアイコン設定
+                                $resourceIcons = [
+                                    'PC'      => '<i class="bi bi-laptop"></i> PC',
+                                    'Server'  => '<i class="bi bi-hdd-rack"></i> サーバー',
+                                    'Network' => '<i class="bi bi-router"></i> ネットワーク',
+                                    'Storage' => '<i class="bi bi-hdd"></i> ストレージ',
+                                    'Other'   => '<i class="bi bi-question-circle"></i> その他',
+                                ];
+
+                                // アイコンを取得、該当しない場合はデフォルトアイコンを設定
+                                echo $resourceIcons[$resource['type']] ?? '<i class="bi bi-question-circle"></i> 不明';
+                                ?>
+                            </td>
                         </tr>
                         <tr>
                             <th class="bg-light">OS</th>
@@ -87,7 +101,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
                     <h5 class="mb-0"><i class="bi bi-key"></i> アカウント一覧</h5>
                     <?php if ($authUser->inGroup('admin')): ?>
-                        <a href="<?= route_to('accounts.create', $resource['id']) ?>" 
+                        <a href="<?= site_url('accounts/create/' . $resource['id']) ?>" 
                             class="btn btn-sm btn-success <?= $resource['deleted_at'] || $resource['status'] == 'retired' ? 'disabled' : '' ?>">
                             <i class="bi bi-plus-lg"></i> アカウント追加
                         </a>
@@ -100,7 +114,7 @@
                     <table class="table table-bordered">
                         <thead class="table-light">
                             <tr>
-                                <th>ユーザー名</th>
+                                <th>アカウント名</th>
                                 <th>接続方式</th>
                                 <th>ポート</th>
                                 <th>状態</th>
@@ -116,7 +130,17 @@
                             <?php foreach ($accounts as $account) : ?>
                                 <tr class="<?= $account['deleted_at'] ? 'text-muted' : '' ?>">
                                     <td><?= esc($account['username']) ?></td>
-                                    <td><?= esc($account['connection_type']) ?></td>
+                                    <td>
+                                        <?php
+                                        $connectionLabels = [
+                                            'SSH' => '<i class="bi bi-terminal"></i> SSH',
+                                            'RDP' => '<i class="bi bi-windows"></i> RDP',
+                                            'VNC' => '<i class="bi bi-display"></i> VNC',
+                                            'OTH' => '<i class="bi bi-question-circle"></i> その他'
+                                        ];
+                                        echo $connectionLabels[$account['connection_type']] ?? '<i class="bi bi-question-circle"></i> 不明';
+                                        ?>
+                                    </td>
                                     <td><?= $account['port'] == -1 ? '-' : esc($account['port']) ?></td>
                                     <td>
                                         <?php
@@ -149,13 +173,22 @@
                                         <a href="<?= route_to('accounts.edit', $account['id']) ?>" class="btn btn-sm btn-primary <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
                                             <i class="bi bi-pencil-square"></i> 編集
                                         </a>
-                                        <form action="<?= route_to('accounts.delete', $account['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('本当に削除しますか？');">
-                                            <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-sm btn-danger <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
-                                                <i class="bi bi-trash"></i> 削除
-                                            </button>
-                                        </form>
+                                        
+                                        <?php if ($account['status'] === 'retired') : ?>
+                                            <form action="<?= route_to('accounts.delete', $account['id']) ?>" method="post" class="d-inline">
+                                                <?= csrf_field() ?>
+                                                <button type="button" class="btn btn-sm btn-danger <?= $account['deleted_at'] ? 'disabled' : '' ?>"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#confirmModal"
+                                                    data-action="<?= route_to('accounts.delete', $account['id']) ?>"
+                                                    data-title="削除確認"
+                                                    data-message="本当にこのアカウントを削除しますか？">
+                                                    <i class="bi bi-trash"></i> 削除
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
                                     </td>
+
                                     <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>
@@ -163,12 +196,23 @@
                     </table>
                 <?php endif; ?>
 
+                <?php
+                // リファラーを取得
+                $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+                $defaultBackURL = route_to('resources.index'); // デフォルトはリソース一覧
+
+                // リファラーが `reservations/schedule` を含む場合はそのページへ、それ以外は `resources.index`
+                $backURL = (!empty($referrer) && strpos($referrer, site_url('reservations/schedule')) !== false)
+                    ? site_url('reservations/schedule')
+                    : $defaultBackURL;
+                ?>
+
                 <div class="d-flex justify-content-between mt-3">
-                    <a href="<?= route_to('resources.index') ?>" class="btn btn-secondary">
+                    <a href="<?= esc($backURL) ?>" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> 戻る
                     </a>
                     <?php if ($authUser->inGroup('admin')): ?>
-                        <a href="<?= route_to('resources.edit', $resource['id']) ?>"
+                        <a href="<?= site_url('resources/edit/' . $resource['id']) ?>"
                             class="btn btn-primary <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
                             <i class="bi bi-pencil-square"></i> 編集
                         </a>

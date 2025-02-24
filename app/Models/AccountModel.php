@@ -32,9 +32,9 @@ class AccountModel extends Model
         ],
         'username' => [
             'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9._@-]+$/]',
-            'label' => 'ユーザー名',
+            'label' => 'アカウント名',
             'errors' => [
-                'regex_match' => 'ユーザー名は英数字、ドット、アンダースコア、ハイフン、@ のみ使用できます。',
+                'regex_match' => 'アカウント名は英数字、ドット、アンダースコア、ハイフン、@ のみ使用できます。',
             ]
         ],
         'password' => [

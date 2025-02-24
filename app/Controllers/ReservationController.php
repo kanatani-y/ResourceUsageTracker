@@ -42,24 +42,24 @@ class ReservationController extends BaseController
     {
         // **ゲストユーザーは予約作成画面にアクセスできない**
         if (auth()->user()->inGroup('guest')) {
-            return redirect()->route('reservations.schedule')->with('error', 'ゲストユーザーは予約を登録できません。');
+            return redirect()->to(site_url('reservations/schedule'))->with('error', 'ゲストユーザーは予約を登録できません。');
         }
         
         // `time` の `-` を `:` に戻す
         if ($time) {
             $time = str_replace('-', ':', $time);
         }
-    
+
         $resourceModel = new ResourceModel();
         $accountModel = new AccountModel();
         $userModel = new \App\Models\UserModel();
-    
+
         if ($account_id) {
             $account = $accountModel->find($account_id);
     
             // 利用禁止または廃止のアカウントは予約不可
             if ($account && in_array($account['status'], ['restricted', 'retired'])) {
-                return redirect()->route('reservations.schedule')->with('error', 'このアカウントは予約できません。');
+                return redirect()->to(site_url('reservations/schedule'))->with('error', 'このアカウントは予約できません。');
             }
         }
 
@@ -75,8 +75,6 @@ class ReservationController extends BaseController
     
             $accounts[$resource['id']] = !empty($resourceAccounts) ? $resourceAccounts : [];
         }
-    
-        $userModel = new \App\Models\UserModel();
 
         $users = auth()->user()->inGroup('admin')
             ? $userModel->select('users.id, users.username, users.fullname')
@@ -88,22 +86,17 @@ class ReservationController extends BaseController
         
         // **予約日をURLから取得し、デフォルト値を設定**
         $selectedDate = $reservation_date ?? date('Y-m-d');
-    
-        // **開始時刻のデフォルト設定**
+
+        // **開始時刻のデフォルト設定（1時間刻み）**
         if (!$time) {
             $currentHour = (int) date('H');
-            $currentMinutes = (int) date('i');
 
             if ($currentHour < 9) {
                 $startTime = "09:00";
             } elseif ($currentHour >= 17) {
                 $startTime = "17:00";
             } else {
-                if ($currentMinutes <= 30) {
-                    $startTime = sprintf('%02d:30', $currentHour);
-                } else {
-                    $startTime = sprintf('%02d:00', min($currentHour + 1, 17));
-                }
+                $startTime = sprintf('%02d:00', min($currentHour + 1, 17));
             }
         } else {
             $startTime = $time;
@@ -112,12 +105,12 @@ class ReservationController extends BaseController
         // **終了時刻を開始時刻の+1時間に設定（最大18:00）**
         $startHour = (int) explode(':', $startTime)[0];
         $endTime = sprintf('%02d:00', min($startHour + 1, 18));
-    
+
         return view('reservations/form', [
             'resource_id'  => $resource_id,
             'account_id'   => $account_id,
-            'time'         => $startTime,  // 開始時刻
-            'end_time'     => $endTime,    // 終了時刻
+            'time'         => $startTime,
+            'end_time'     => $endTime,
             'resources'    => $resources,
             'accounts'     => $accounts,
             'reservations' => [],
@@ -130,7 +123,7 @@ class ReservationController extends BaseController
     {
         // **ゲストユーザーは予約できない**
         if (auth()->user()->inGroup('guest')) {
-            return redirect()->route('reservations.schedule')->with('error', 'ゲストユーザーは予約を登録できません。');
+            return redirect()->to(site_url('reservations/schedule'))->with('error', 'ゲストユーザーは予約を登録できません。');
         }
 
         $reservationModel = new ReservationModel();
@@ -176,8 +169,8 @@ class ReservationController extends BaseController
 
         // **データ保存**
         $reservationModel->insert($data);
-    
-        return redirect()->to(route_to('reservations.schedule') . '?date=' . urlencode($date))
+
+        return redirect()->to(site_url('reservations/schedule') . '?date=' . urlencode($date))
                 ->with('message', '予約を追加しました。');
     }
 
@@ -195,13 +188,13 @@ class ReservationController extends BaseController
         $accounts = [];
         foreach ($resources as $resource) {
             $resourceAccounts = $accountModel
-                ->select('id, username, status') // status を追加
+                ->select('id, username, status, connection_type')
                 ->where('resource_id', $resource['id'])
                 ->findAll();
     
             if (empty($resourceAccounts)) {
                 // アカウントがない場合、デフォルト値を追加
-                $accounts[$resource['id']] = [['id' => 0, 'username' => 'なし', 'status' => 'available']];
+                $accounts[$resource['id']] = [['id' => 0, 'username' => 'なし', 'status' => 'available', 'connection_type' => '']];
             } else {
                 $accounts[$resource['id']] = $resourceAccounts;
             }
