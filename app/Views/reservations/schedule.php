@@ -148,14 +148,16 @@
 
                     for ($hour = 9; $hour <= 17; $hour++) {
                         if (isset($hourlySlots[$hour]) && strpos($hourlySlots[$hour], 'reservation-cell') === false) {
-                            if (!$isGuest && $account['status'] === 'available' && $resource['status'] === 'available') {
+
+                            if ($isGuest) {
+                                $hourlySlots[$hour] = "<td></td>";
+                            } elseif ($account['status'] === 'available' && $resource['status'] === 'available') {
                                 $hourlySlots[$hour] = "<td class='empty-slot' data-resource-id='" . esc($resource['id']) . "' 
                                                                         data-account-id='" . esc($account['id']) . "' 
                                                                         data-reservation-date='" . esc($selectedDate) . "' 
                                                                         data-time='" . esc($hour) . ":00'></td>";
                             } else {
-                                $hourlySlots[$hour] = 
-                                    $account['status'] !== 'available' || $resource['status'] !== 'available' ? "<td class='text-muted'>×</td>" : "<td>×</td>";
+                                $hourlySlots[$hour] = "<td class='text-muted'>×</td>";
                             }
                         }
                     }
