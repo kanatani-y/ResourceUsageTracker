@@ -146,10 +146,10 @@
                                         <?php
                                             switch ($account['status']) {
                                                 case 'available':
-                                                    echo '<span class="badge bg-info">利用可能</span>';
+                                                    echo '<span class="badge bg-info">有効</span>';
                                                     break;
                                                 case 'restricted':
-                                                    echo '<span class="badge bg-danger">利用禁止</span>';
+                                                    echo '<span class="badge bg-danger">無効</span>';
                                                     break;
                                                 case 'retired':
                                                     echo '<span class="badge bg-secondary">廃止</span>';

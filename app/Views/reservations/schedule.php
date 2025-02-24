@@ -97,9 +97,9 @@
                         <?php if ($account['username'] === 'なし'): ?>
                             <span>-</span>
                         <?php elseif ($account['status'] === 'available'): ?>
-                            <span class="badge bg-info">利用可能</span>
+                            <span class="badge bg-info">有効</span>
                         <?php elseif ($account['status'] === 'restricted'): ?>
-                            <span class="badge bg-danger">利用禁止</span>
+                            <span class="badge bg-danger">無効</span>
                         <?php elseif ($account['status'] === 'retired'): ?>
                             <span class="badge bg-secondary">廃止</span>
                         <?php else: ?>
