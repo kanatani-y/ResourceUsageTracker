@@ -37,9 +37,9 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="username" class="form-label">アカウント名</label>
-                                <input type="text" class="form-control" id="username" name="username"
-                                    value="<?= isset($account) ? esc($account['username']) : '' ?>" required
+                                <label for="account_name" class="form-label">ユーザー名</label>
+                                <input type="text" class="form-control" id="account_name" name="account_name"
+                                    value="<?= isset($account) ? esc($account['account_name']) : '' ?>" required
                                     maxlength="50" pattern="^[a-zA-Z0-9_.-]+$"
                                     title="半角英数字、アンダースコア(_)、ハイフン(-)、ドット(.)のみ使用できます。">
                             </div>

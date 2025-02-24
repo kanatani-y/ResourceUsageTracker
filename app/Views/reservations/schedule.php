@@ -33,7 +33,7 @@
             
             foreach ($resources as $resource):
                 $resourceId = $resource['id'];
-                $resourceAccounts = $accounts[$resourceId] ?? [['id' => 0, 'username' => 'なし', 'status' => 'available']];
+                $resourceAccounts = $accounts[$resourceId] ?? [['id' => 0, 'account_name' => 'なし', 'status' => 'available']];
                 $firstRow = true;
 
                 foreach ($resourceAccounts as $account):
@@ -88,18 +88,18 @@
                             'VNC' => '<i class="bi bi-display"></i> ',
                             'OTH' => '<i class="bi bi-question-circle"></i> '
                         ];
-                        echo ($connectionLabels[$account['connection_type']] ?? '') . esc($account['username']);
+                        echo ($connectionLabels[$account['connection_type']] ?? '') . esc($account['account_name']);
                         ?>
                     </td>
 
                     <!-- アカウント状態 -->
                     <td class="text-start">
-                        <?php if ($account['username'] === 'なし'): ?>
+                        <?php if ($account['account_name'] === 'なし'): ?>
                             <span>-</span>
                         <?php elseif ($account['status'] === 'available'): ?>
-                            <span class="badge bg-info">利用可能</span>
+                            <span class="badge bg-info">有効</span>
                         <?php elseif ($account['status'] === 'restricted'): ?>
-                            <span class="badge bg-danger">利用禁止</span>
+                            <span class="badge bg-danger">無効</span>
                         <?php elseif ($account['status'] === 'retired'): ?>
                             <span class="badge bg-secondary">廃止</span>
                         <?php else: ?>

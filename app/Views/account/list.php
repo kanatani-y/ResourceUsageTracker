@@ -6,7 +6,7 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-2">
         <h4 class="mb-0">アカウント一覧</h4>
-        <a href="<?= isset($resource) ? site_url('accounts/create/' . $resource['id']) : site_url('accounts/create_no_resource') ?>" class="btn btn-sm btn-success">
+        <a href="<?= isset($resource) ? site_url('accounts/create/' . $resource['id']) : site_url('accounts/create') ?>" class="btn btn-sm btn-success">
             <i class="bi bi-plus-lg"></i> 追加
         </a>
     </div>
@@ -31,7 +31,7 @@
                             <i class="bi bi-server"></i> <?= esc($account['resource_name'] ?? '不明') ?>
                         </a>
                     </td>
-                    <td><?= esc($account['username']) ?></td>
+                    <td><?= esc($account['account_name']) ?></td>
                     <td>
                         <?php
                         $connectionLabels = [
@@ -52,10 +52,10 @@
                             <?php
                             switch ($account['status']) {
                                 case 'available':
-                                    echo '<span class="badge bg-info">利用可能</span>';
+                                    echo '<span class="badge bg-info">有効</span>';
                                     break;
                                 case 'restricted':
-                                    echo '<span class="badge bg-danger">利用禁止</span>';
+                                    echo '<span class="badge bg-danger">無効</span>';
                                     break;
                                 case 'retired':
                                     echo '<span class="badge bg-secondary">廃止</span>';

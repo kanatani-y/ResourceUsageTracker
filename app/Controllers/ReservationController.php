@@ -188,13 +188,13 @@ class ReservationController extends BaseController
         $accounts = [];
         foreach ($resources as $resource) {
             $resourceAccounts = $accountModel
-                ->select('id, username, status, connection_type')
+                ->select('id, account_name, status, connection_type')
                 ->where('resource_id', $resource['id'])
                 ->findAll();
     
             if (empty($resourceAccounts)) {
                 // アカウントがない場合、デフォルト値を追加
-                $accounts[$resource['id']] = [['id' => 0, 'username' => 'なし', 'status' => 'available', 'connection_type' => '']];
+                $accounts[$resource['id']] = [['id' => 0, 'account_name' => 'なし', 'status' => 'available', 'connection_type' => '']];
             } else {
                 $accounts[$resource['id']] = $resourceAccounts;
             }
@@ -203,7 +203,7 @@ class ReservationController extends BaseController
         // 予約データ取得（選択日）
         $reservations = $reservationModel
             ->select('reservations.*, resources.name as resource_name, 
-                IFNULL(accounts.username, "なし") as account_name, 
+                IFNULL(accounts.account_name, "なし") as account_name, 
                 accounts.status as account_status, 
                 users.fullname as user_name')
             ->join('resources', 'resources.id = reservations.resource_id')
@@ -390,7 +390,7 @@ class ReservationController extends BaseController
     
             // 条件に一致する予約を取得
             $query = $reservationModel
-                ->select('reservations.*, users.fullname AS user_name, accounts.username AS account_name')
+                ->select('reservations.*, users.fullname AS user_name, accounts.account_name AS account_name')
                 ->join('users', 'users.id = reservations.user_id', 'left')
                 ->join('accounts', 'accounts.id = reservations.account_id', 'left OUTER')
                 ->where('reservations.start_time >=', "$selectedDate 00:00:00")
