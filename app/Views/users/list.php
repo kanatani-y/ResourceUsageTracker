@@ -6,7 +6,7 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-2">
         <h4 class="mb-0">ユーザー一覧</h4>
-        <a href="<?= route_to('admin.users.register') ?>" class="btn btn-sm btn-success float-end">
+        <a href="<?= site_url('admin/users/register') ?>" class="btn btn-sm btn-success float-end">
             <i class="bi bi-plus-lg"></i> 追加
         </a>
     </div>
@@ -54,8 +54,14 @@
                     <td class="text-nowrap" style="width: 150px;">
                         <div>
                             <?php if ($user->deleted_at) : ?>
-                                <a href="<?= site_url('admin/users/restore/' . $user->id) ?>" class="btn btn-sm btn-warning" 
-                                    onclick="return confirm('対象を復元します。よろしいですか？')">
+                                <!-- 復元リンク（モーダルで確認） -->
+                                <a href="#" class="btn btn-sm btn-warning"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#confirmModal"
+                                    data-method="get"
+                                    data-action="<?= site_url('admin/users/restore/' . $user->id) ?>"
+                                    data-title="復元確認"
+                                    data-message="対象を復元します。よろしいですか？">
                                     <i class="bi bi-arrow-counterclockwise"></i> 復元
                                 </a>
                             <?php else : ?>
@@ -64,10 +70,14 @@
                                         <i class="bi bi-pencil-square"></i> 編集
                                     </a>
                                     <?php if ($user->active == 0 && $user->id !== auth()->user()->id) : ?>
-                                        <form action="<?= site_url('admin/users/delete/' . $user->id) ?>" method="post" class="d-inline" 
-                                            onsubmit="return confirm('対象を削除します。よろしいですか？');">
+                                        <form action="<?= site_url('admin/users/delete/' . $user->id) ?>" method="post" class="d-inline">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-sm btn-danger">
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#confirmModal"
+                                                data-action="<?= site_url('admin/users/delete/' . $user->id) ?>"
+                                                data-title="削除確認"
+                                                data-message="本当にこのユーザーを削除しますか？">
                                                 <i class="bi bi-trash"></i> 削除
                                             </button>
                                         </form>

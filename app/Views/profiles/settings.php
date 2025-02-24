@@ -21,7 +21,7 @@
                         </div>
                     <?php endif ?>
 
-                    <form action="<?= route_to('profiles.update') ?>" method="post" id="userSettingsForm">
+                    <form action="<?= site_url('profiles/update') ?>" method="post" id="userSettingsForm">
                         <?= csrf_field() ?>
 
                         <div class="row">
@@ -64,7 +64,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="<?= site_url('admin/users') ?>" class="btn btn-secondary">
+                            <a href="<?= site_url('/') ?>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 戻る
                             </a>
                             <button type="submit" class="btn btn-primary">

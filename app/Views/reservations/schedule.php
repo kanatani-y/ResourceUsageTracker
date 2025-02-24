@@ -40,16 +40,29 @@
             ?>
                 <tr>
                     <?php if ($firstRow): ?>
-                        <td class="fw-bold text-start"
-                            rowspan="<?= count($resourceAccounts) ?>">
+                        <?php
+                        $resourceIcons = [
+                            'PC'      => '<i class="bi bi-laptop"></i>',      // PC
+                            'Server'  => '<i class="bi bi-hdd-rack"></i>',   // サーバー
+                            'Network' => '<i class="bi bi-router"></i>',     // ネットワーク
+                            'Storage' => '<i class="bi bi-hdd"></i>',        // ストレージ
+                            'Other'   => '<i class="bi bi-question-circle"></i>', // その他
+                        ];
+                        ?>
+
+                        <!-- リソース名 -->
+                        <td class="fw-bold text-start" rowspan="<?= count($resourceAccounts) ?>">
                             <?php if (!$isGuest): ?>
-                                <a href="<?= route_to('resources.show', $resource['id']) ?>" class="text-decoration-none">
-                                    <i class="bi bi-server"></i> <?= esc($resource['name']) ?>
+                                <a href="<?= site_url('resources/show/' . $resource['id']) ?>" class="text-decoration-none">
+                                    <?= $resourceIcons[$resource['type']] ?? '<i class="bi bi-question-circle"></i>' ?> 
+                                    <?= esc($resource['name']) ?>
                                 </a>
                             <?php else: ?>
-                                <i class="bi bi-server"></i> <?= esc($resource['name']) ?>
+                                <?= $resourceIcons[$resource['type']] ?? '<i class="bi bi-question-circle"></i>' ?> 
+                                <?= esc($resource['name']) ?>
                             <?php endif; ?>
                         </td>
+
                         <!-- リソース状態 -->
                         <td class="text-start" rowspan="<?= count($resourceAccounts) ?>">
                             <?php
@@ -67,11 +80,18 @@
                             ?>
                         </td>
                     <?php endif; ?>
-
-                    <td class="text-start <?= in_array($account['status'], ['restricted', 'retired']) ? 'text-muted' : '' ?>">
-                        <?= esc($account['username']) ?>
+                    <td>
+                        <?php
+                        $connectionLabels = [
+                            'SSH' => '<i class="bi bi-terminal"></i> ',
+                            'RDP' => '<i class="bi bi-windows"></i> ',
+                            'VNC' => '<i class="bi bi-display"></i> ',
+                            'OTH' => '<i class="bi bi-question-circle"></i> '
+                        ];
+                        echo ($connectionLabels[$account['connection_type']] ?? '') . esc($account['username']);
+                        ?>
                     </td>
-                    
+
                     <!-- アカウント状態 -->
                     <td class="text-start">
                         <?php if ($account['username'] === 'なし'): ?>
@@ -165,15 +185,27 @@
                 <table class="table table-bordered">
                     <tr><th class="bg-light">予約者</th><td id="modalUser"></td></tr>
                     <tr>
+                        <?php
+                        $resourceIcons = [
+                            'PC'      => '<i class="bi bi-laptop"></i>',      // PC
+                            'Server'  => '<i class="bi bi-hdd-rack"></i>',   // サーバー
+                            'Network' => '<i class="bi bi-router"></i>',     // ネットワーク
+                            'Storage' => '<i class="bi bi-hdd"></i>',        // ストレージ
+                            'Other'   => '<i class="bi bi-question-circle"></i>', // その他
+                        ];
+                        ?>
+
+                        <!-- リソース名 -->
                         <th class="bg-light">リソース</th>
                         <td id="modalResource">
-                        <?php if (!auth()->user()->inGroup('guest')): ?>
-                            <a href="#" id="modalResourceLink" class="text-decoration-none fw-bold">
-                                <i class="bi bi-server"></i> <span id="modalResourceName"></span>
-                            </a>
-                        <?php else: ?>
-                            <i class="bi bi-server"></i> <span id="modalResourceName"></span>
-                        <?php endif; ?>
+                            <?php if (!$isGuest): ?>
+                                <a href="#" id="modalResourceLink" class="text-decoration-none fw-bold">
+                                    <?= $resourceIcons[$resource['type']] ?? '<i class="bi bi-question-circle"></i>' ?> 
+                                    <span id="modalResourceName"></span>
+                                </a>
+                            <?php else: ?>
+                                <?= $resourceIcons[$resource['type']] ?? '<i class="bi bi-question-circle"></i>' ?> <span id="modalResourceName"></span>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <tr><th class="bg-light">アカウント</th><td id="modalAccount"></td></tr>

@@ -24,7 +24,7 @@
                         </div>
                     <?php endif ?>
 
-                    <form action="<?= isset($user) ? route_to('admin.users.update', $user->id) : route_to('admin.users.register') ?>" method="post" id="userForm">
+                    <form action="<?= isset($user) ? site_url('admin/users/update/' . $user->id) : site_url('admin/users/register') ?>" method="post" id="userForm">
                         <?= csrf_field() ?>
 
                         <div class="row">
@@ -75,7 +75,6 @@
                                     <?= (isset($user) && $user->inGroup('admin')) || (isset($user) && $user->id == $loggedInUser->id) ? 'disabled' : '' ?> required>
                                     <option value="user" <?= isset($user) && $user->inGroup('user') ? 'selected' : '' ?>>一般ユーザー</option>
                                     <option value="admin" <?= isset($user) && $user->inGroup('admin') ? 'selected' : '' ?>>管理者</option>
-                                    <option value="guest" <?= isset($user) && $user->inGroup('guest') ? 'selected' : '' ?>>ゲスト</option>
                                 </select>
                                 <?php if ((isset($user) && $user->inGroup('admin')) || (isset($user) && $user->id == $loggedInUser->id)) : ?>
                                     <input type="hidden" name="role" value="<?= $user->inGroup('admin') ? 'admin' : '' ?>">

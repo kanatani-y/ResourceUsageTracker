@@ -6,11 +6,10 @@ use CodeIgniter\Controller;
 
 class AuthController extends Controller
 {
-
     public function login()
     {
         if (auth()->loggedIn()) {
-            return redirect()->route('reservations.schedule'); // 既にログイン済みならリダイレクト
+            return redirect()->to(site_url('reservations/schedule')); // 既にログイン済みならリダイレクト
         }
         
         if ($this->request->getMethod() === 'POST') {
@@ -27,22 +26,21 @@ class AuthController extends Controller
                               ->where('active', 1) // 無効ユーザーをブロック
                               ->first();
             if (!$user) {
-                return redirect()->route('login')->withInput()->with('error', '無効なユーザーです。');
+                return redirect()->to(site_url('login'))->withInput()->with('error', '無効なユーザーです。');
             }
     
             // **認証を実行**
             $result = $auth->attempt($credentials);
     
             if (! $result->isOK()) {
-                return redirect()->route('login')->withInput()->with('error', $result->reason());
+                return redirect()->to(site_url('login'))->withInput()->with('error', $result->reason());
             }
     
-            return redirect()->route('reservations.schedule');
+            return redirect()->to(site_url('reservations/schedule'));
         }
     
         return view('Auth/login');
     }
-    
     
     public function guestLogin()
     {
@@ -64,10 +62,10 @@ class AuthController extends Controller
         $result = $auth->attempt($credentials);
 
         if (! $result->isOK()) {
-            return redirect()->route('login')->withInput()->with('error', $result->reason());
+            return redirect()->to(site_url('login'))->withInput()->with('error', $result->reason());
         }
 
-        return redirect()->route('reservations.schedule')->with('message', 'ゲストとしてログインしました。');
+        return redirect()->to(site_url('reservations/schedule'))->with('message', 'ゲストとしてログインしました。');
     }
 
     public function logout()
@@ -78,6 +76,6 @@ class AuthController extends Controller
             $auth->logout();
         }
     
-        return redirect()->route('login')->with('message', 'ログアウトしました。');
+        return redirect()->to(site_url('login'))->with('message', 'ログアウトしました。');
     }
 }

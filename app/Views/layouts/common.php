@@ -43,18 +43,17 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('reservations.schedule') ?>">
+                                    <a class="dropdown-item" href="<?= site_url('reservations/schedule') ?>">
                                         <i class="bi bi-list-check"></i> 予約スケジュール
                                     </a>
                                 </li>
                                 <li>
                                     <?php if (!$authUser->inGroup('guest')): ?> 
-                                        <a class="dropdown-item" href="<?= route_to('reservations.create') ?>">
+                                        <a class="dropdown-item" href="<?= site_url('reservations/create') ?>">
                                             <i class="bi bi-calendar-plus"></i> 予約登録
                                         </a>
                                     <?php endif; ?>
                                 </li>
-
                             </ul>
                         </li>
 
@@ -66,13 +65,13 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('resources.index') ?>">
+                                    <a class="dropdown-item" href="<?= site_url('resources') ?>">
                                         <i class="bi bi-server"></i> リソース一覧
                                     </a>
                                 </li>
                                 <?php if ($authUser->inGroup('admin')): ?>
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('resources.create') ?>">
+                                    <a class="dropdown-item" href="<?= site_url('resources/create') ?>">
                                         <i class="bi bi-plus-square"></i> リソース登録
                                     </a>
                                 </li>
@@ -89,7 +88,7 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('accounts.index') ?>">
+                                    <a class="dropdown-item" href="<?= site_url('accounts') ?>">
                                         <i class="bi bi-list-ul"></i> アカウント一覧
                                     </a>
                                 </li>
@@ -103,12 +102,12 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('admin.users.index') ?>">
+                                    <a class="dropdown-item" href="<?= site_url('admin/users') ?>">
                                         <i class="bi bi-list-ul"></i> ユーザ一覧
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="<?= route_to('admin.users.register') ?>">
+                                    <a class="dropdown-item" href="<?= site_url('admin/users/register') ?>">
                                         <i class="bi bi-person-plus"></i> ユーザ登録
                                     </a>
                                 </li>
@@ -125,13 +124,13 @@
                             <ul class="dropdown-menu">
                                 <?php if (!$authUser->inGroup('guest')): ?> 
                                     <li>
-                                        <a class="dropdown-item" href="<?= route_to('profiles.settings', $authUser->id) ?>">
+                                        <a class="dropdown-item" href="<?= site_url('profiles/settings/') ?>">
                                             <i class="bi bi-gear"></i> 設定
                                         </a>
                                     </li>
                                 <?php endif; ?>
                                 <li>
-                                    <form id="logoutForm" action="<?= route_to('logout') ?>" method="post">
+                                    <form id="logoutForm" action="<?= site_url('logout') ?>" method="post">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="dropdown-item text-danger">
                                             <i class="bi bi-box-arrow-right"></i> ログアウト
@@ -168,12 +167,95 @@
     <?php endif; ?>
 
         <?= $this->renderSection('main') ?>
+
+
+        <!-- 汎用確認モーダル -->
+        <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="confirmModalLabel">確認</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                    </div>
+                    <div class="modal-body" id="confirmModalMessage">
+                        <!-- メッセージが動的に入る -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                        
+                        <!-- GETリクエスト時のボタン -->
+                        <button id="confirmOkButton" class="btn btn-primary" style="display: none;">OK</button>
+                        
+                        <!-- POSTリクエスト時のフォーム -->
+                        <form id="confirmForm" action="" method="post">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-primary">OK</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var confirmModal = document.getElementById("confirmModal");
+            var confirmForm = document.getElementById("confirmForm");
+            var confirmModalTitle = document.getElementById("confirmModalLabel");
+            var confirmModalMessage = document.getElementById("confirmModalMessage");
+            var confirmOkButton = document.getElementById("confirmOkButton");
+
+            confirmModal.addEventListener("show.bs.modal", function(event) {
+                var button = event.relatedTarget;
+                if (!button.hasAttribute("data-action")) return;
+
+                var action = button.getAttribute("data-action");
+                var method = button.getAttribute("data-method") || "post"; // デフォルトはPOST
+                var title = button.getAttribute("data-title");
+                var message = button.getAttribute("data-message");
+
+                // モーダルのタイトルとメッセージを更新
+                confirmModalTitle.textContent = title;
+                confirmModalMessage.textContent = message;
+
+                if (method.toLowerCase() === "get") {
+                    // GETリクエストの場合、直接遷移
+                    confirmForm.style.display = "none";
+                    confirmOkButton.style.display = "block";
+                    confirmOkButton.onclick = function() {
+                        window.location.href = action;
+                    };
+                } else {
+                    // POSTリクエストの場合、フォームを使用
+                    confirmForm.style.display = "block";
+                    confirmOkButton.style.display = "none";
+                    confirmForm.action = action;
+                }
+            });
+        });
+        </script>
+
     </main>
 
     <?= $this->renderSection('pageScripts') ?>
 
     <!-- Bootstrap JavaScript -->
     <script src="<?= base_url('assets/js/bootstrap.bundle.min.js') ?>"></script>
+    <style>
+        /* フェードインの基本スタイル */
+        body {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in forwards;
+        }
 
+        /* アニメーション定義 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
 </body>
 </html>
