@@ -202,7 +202,7 @@ class ReservationController extends BaseController
     
         // 予約データ取得（選択日）
         $reservations = $reservationModel
-            ->select('reservations.*, resources.name as resource_name, 
+            ->select('reservations.*, resources.name as resource_name, resources.type as resource_type, 
                 IFNULL(accounts.account_name, "なし") as account_name, 
                 accounts.status as account_status, 
                 users.fullname as user_name')

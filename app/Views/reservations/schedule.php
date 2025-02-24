@@ -129,6 +129,7 @@
                                 'resource_id' => $res['resource_id'],
                                 'user_name' => $userName,
                                 'resource' => esc($res['resource_name']),
+                                'resource_type' => esc($res['resource_type']), 
                                 'account' => esc($res['account_name']),
                                 'start_time' => esc($res['start_time']),
                                 'end_time' => esc($res['end_time']),
@@ -258,8 +259,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // 予約登録ページに遷移
-            window.location.href = `/reservations/create/${resourceId}/${accountId}/${reservationDate}/${time}`;
+            // site_url() を JavaScript に埋め込む
+            const siteUrl = "<?= site_url('reservations/create') ?>";
+            window.location.href = `${siteUrl}/${resourceId}/${accountId}/${reservationDate}/${time}`;
         });
     });
 
@@ -268,32 +270,55 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             let details = JSON.parse(this.getAttribute('data-details'));
 
-            // モーダルにデータをセット
-            document.getElementById('modalUser').textContent = details.user_name;
-            document.getElementById('modalAccount').textContent = details.account;
-            document.getElementById('modalStartTime').textContent = details.start_time;
-            document.getElementById('modalEndTime').textContent = details.end_time;
-            document.getElementById('modalPurpose').textContent = details.purpose;
-
-            // リソース名とリンクを適用
-            let modalResourceName = document.getElementById('modalResourceName');
+            // モーダルの要素取得
+            let modalUser = document.getElementById('modalUser');
+            let modalAccount = document.getElementById('modalAccount');
+            let modalStartTime = document.getElementById('modalStartTime');
+            let modalEndTime = document.getElementById('modalEndTime');
+            let modalPurpose = document.getElementById('modalPurpose');
+            let modalResource = document.getElementById('modalResource');
             let modalResourceLink = document.getElementById('modalResourceLink');
-            modalResourceName.textContent = details.resource;
-            
-            // modalResourceLink が存在するかチェックしてリンクをセット
+
+            // 要素が取得できない場合は処理を中止
+            if (!modalUser || !modalAccount || !modalStartTime || !modalEndTime || !modalPurpose || !modalResource) {
+                console.error("モーダルの要素が見つかりません。");
+                return;
+            }
+
+            // モーダルにデータをセット
+            modalUser.textContent = details.user_name;
+            modalAccount.textContent = details.account;
+            modalStartTime.textContent = details.start_time;
+            modalEndTime.textContent = details.end_time;
+            modalPurpose.textContent = details.purpose;
+
+            // リソースのアイコンを設定
+            let resourceIcons = {
+                'PC': '<i class="bi bi-laptop"></i>',
+                'Server': '<i class="bi bi-hdd-rack"></i>',
+                'Network': '<i class="bi bi-router"></i>',
+                'Storage': '<i class="bi bi-hdd"></i>',
+                'Other': '<i class="bi bi-question-circle"></i>'
+            };
+
+            let resourceIcon = resourceIcons[details.resource_type] || '<i class="bi bi-question-circle"></i>';
+            modalResource.innerHTML = `${resourceIcon} ${details.resource}`;
+
+            // リンクの設定（ゲストユーザー以外のみ）
             if (modalResourceLink) {
-                modalResourceLink.href = `<?= site_url('resources/show') ?>/${details.resource_id}`;
+                modalResourceLink.href = "<?= site_url('resources/show') ?>/" + details.resource_id;
             }
 
             // 編集ボタンの表示/非表示
             let editBtn = document.getElementById('editReservationBtn');
             let isAdmin = <?= json_encode(auth()->user()->inGroup('admin')) ?>;
-
-            if (isAdmin || details.isOwn) {
-                editBtn.classList.remove('d-none');
-                editBtn.href = "<?= site_url('reservations/edit') ?>/" + details.id;
-            } else {
-                editBtn.classList.add('d-none');
+            if (editBtn) {
+                if (isAdmin || details.isOwn) {
+                    editBtn.classList.remove('d-none');
+                    editBtn.href = "<?= site_url('reservations/edit') ?>/" + details.id;
+                } else {
+                    editBtn.classList.add('d-none');
+                }
             }
 
             // モーダルを表示
@@ -301,6 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
             reservationModal.show();
         });
     });
+
 });
 </script>
 
