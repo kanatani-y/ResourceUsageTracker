@@ -27,7 +27,7 @@ class AccountController extends BaseController
                 ->orderBy('accounts.account_name', 'ASC')
                 ->findAll();
         } else {
-            $accounts = $accountModel->withDeleted()->select('accounts.*, resources.name as resource_name')
+            $accounts = $accountModel->withDeleted()->select('accounts.*, resources.name as resource_name, resources.type as resource_type')
                 ->join('resources', 'resources.id = accounts.resource_id', 'left')
                 ->orderBy("CASE WHEN accounts.deleted_at IS NULL THEN 0 ELSE 1 END ASC", '', false)
                 ->orderBy('accounts.status', 'ASC')

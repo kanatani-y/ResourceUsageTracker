@@ -17,8 +17,8 @@
         <table class="table table-bordered table-hover text-center align-middle">
             <thead class="table-light sticky-top">
                 <tr>
-                    <th class="bg-secondary text-white" colspan="2">リソース</th>
-                    <th class="bg-secondary text-white" colspan="2">アカウント</th>
+                    <th colspan="2">リソース</th>
+                    <th colspan="2">アカウント</th>
                     <?php for ($hour = 9; $hour <= 17; $hour++): ?>
                         <th class="bg-primary text-white"><?= $hour ?>:00</th>
                     <?php endfor; ?>
