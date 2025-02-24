@@ -34,22 +34,24 @@
                         <td><?= $resource['id'] ?></td>
                         <td class="text-decoration-none fw-bold">
                             <a href="<?= site_url('resources/show/' . $resource['id']) ?>" class="text-decoration-none">
-                                <?php
-                                $resourceIcons = [
-                                    'PC'      => '<i class="bi bi-laptop"></i>',      // PC
-                                    'Server'  => '<i class="bi bi-hdd-rack"></i>',   // サーバー
-                                    'Network' => '<i class="bi bi-router"></i>',     // ネットワーク
-                                    'Storage' => '<i class="bi bi-hdd"></i>',        // ストレージ
-                                    'Other'   => '<i class="bi bi-question-circle"></i>', // その他
-                                ];
-                                echo $resourceIcons[$resource['type']] ?? '<i class="bi bi-question-circle"></i>';
-                                ?>
                                 <?= esc($resource['name']) ?>
                             </a>
                         </td>
                         <td><?= esc($resource['hostname']) ?></td>
                         <td><?= esc($resource['ip_address']) ?></td>
-                        <td><?= esc($resource['type']) ?></td>
+                        <td>
+                            <?php
+                            $resourceIcons = [
+                                'PC'      => '<i class="bi bi-laptop"></i>',      // PC
+                                'Server'  => '<i class="bi bi-hdd-rack"></i>',   // サーバー
+                                'Network' => '<i class="bi bi-router"></i>',     // ネットワーク
+                                'Storage' => '<i class="bi bi-hdd"></i>',        // ストレージ
+                                'Other'   => '<i class="bi bi-question-circle"></i>', // その他
+                            ];
+                            echo $resourceIcons[$resource['type']] ?? '<i class="bi bi-question-circle"></i>';
+                            ?>
+                            <?= esc($resource['type']) ?>
+                        </td>
                         <td>
                             <?php if ($resource['deleted_at']) : ?>
                                 <span class="badge bg-secondary">削除済</span>
