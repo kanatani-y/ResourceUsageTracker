@@ -170,17 +170,17 @@
                                     
                                     <?php if ($authUser->inGroup('admin')): ?>
                                     <td>
-                                        <a href="<?= route_to('accounts.edit', $account['id']) ?>" class="btn btn-sm btn-primary <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
+                                    <a href="<?= site_url('accounts/edit/' . $account['id']) ?>" class="btn btn-sm btn-primary <?= $resource['deleted_at'] ? 'disabled' : '' ?>">
                                             <i class="bi bi-pencil-square"></i> 編集
                                         </a>
                                         
                                         <?php if ($account['status'] === 'retired') : ?>
-                                            <form action="<?= route_to('accounts.delete', $account['id']) ?>" method="post" class="d-inline">
+                                            <form action="<?= site_url('accounts/delete/' . $account['id']) ?>" method="post" class="d-inline">
                                                 <?= csrf_field() ?>
                                                 <button type="button" class="btn btn-sm btn-danger <?= $account['deleted_at'] ? 'disabled' : '' ?>"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#confirmModal"
-                                                    data-action="<?= route_to('accounts.delete', $account['id']) ?>"
+                                                    data-action="<?= site_url('accounts/delete/' . $account['id']) ?>"
                                                     data-title="削除確認"
                                                     data-message="本当にこのアカウントを削除しますか？">
                                                     <i class="bi bi-trash"></i> 削除
@@ -199,7 +199,7 @@
                 <?php
                 // リファラーを取得
                 $referrer = $_SERVER['HTTP_REFERER'] ?? '';
-                $defaultBackURL = route_to('resources.index'); // デフォルトはリソース一覧
+                $defaultBackURL = site_url('resources');
 
                 // リファラーが `reservations/schedule` を含む場合はそのページへ、それ以外は `resources.index`
                 $backURL = (!empty($referrer) && strpos($referrer, site_url('reservations/schedule')) !== false)
