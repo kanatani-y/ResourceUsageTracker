@@ -6,7 +6,7 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-2">
         <h4 class="mb-0">アカウント一覧</h4>
-        <a href="<?= isset($resource) ? site_url('accounts/create/' . $resource['id']) : site_url('accounts/create_no_resource') ?>" class="btn btn-sm btn-success">
+        <a href="<?= isset($resource) ? site_url('accounts/create/' . $resource['id']) : site_url('accounts/create') ?>" class="btn btn-sm btn-success">
             <i class="bi bi-plus-lg"></i> 追加
         </a>
     </div>
@@ -31,7 +31,7 @@
                             <i class="bi bi-server"></i> <?= esc($account['resource_name'] ?? '不明') ?>
                         </a>
                     </td>
-                    <td><?= esc($account['username']) ?></td>
+                    <td><?= esc($account['account_name']) ?></td>
                     <td>
                         <?php
                         $connectionLabels = [

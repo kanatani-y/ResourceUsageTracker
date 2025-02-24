@@ -129,7 +129,7 @@
                         <tbody>
                             <?php foreach ($accounts as $account) : ?>
                                 <tr class="<?= $account['deleted_at'] ? 'text-muted' : '' ?>">
-                                    <td><?= esc($account['username']) ?></td>
+                                    <td><?= esc($account['account_name']) ?></td>
                                     <td>
                                         <?php
                                         $connectionLabels = [

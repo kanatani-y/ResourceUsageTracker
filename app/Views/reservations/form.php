@@ -43,7 +43,7 @@
                                         <?php if (isset($account['id'])): // 'id' キーが存在するかチェック ?>
                                             <option value="<?= esc($account['id']) ?>"
                                                 <?= ($account['id'] == ($reservation['account_id'] ?? $account_id)) ? 'selected' : '' ?>>
-                                                <?= esc($account['username'] ?? 'なし') ?>
+                                                <?= esc($account['account_name'] ?? 'なし') ?>
                                             </option>
                                         <?php endif; ?>
                                     <?php endforeach; ?>
@@ -208,7 +208,7 @@
                 accounts[resourceId].forEach(account => {
                     let option = document.createElement('option');
                     option.value = account.id;
-                    option.textContent = account.username;
+                    option.textContent = account.account_name;
                     accountSelect.appendChild(option);
                     // **初期選択を適用**
                     if (String(option.value) === String(selectedAccountId)) {

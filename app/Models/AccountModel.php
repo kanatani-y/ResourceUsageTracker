@@ -13,7 +13,7 @@ class AccountModel extends Model
 
     protected $allowedFields = [
         'resource_id',
-        'username',
+        'account_name',
         'password',
         'connection_type',
         'port',
@@ -30,7 +30,7 @@ class AccountModel extends Model
             'rules' => 'required|integer',
             'label' => 'リソースID'
         ],
-        'username' => [
+        'account_name' => [
             'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9._@-]+$/]',
             'label' => 'アカウント名',
             'errors' => [

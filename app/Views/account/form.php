@@ -37,9 +37,9 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="username" class="form-label">アカウント名</label>
-                                <input type="text" class="form-control" id="username" name="username"
-                                    value="<?= isset($account) ? esc($account['username']) : '' ?>" required
+                                <label for="account_name" class="form-label">ユーザー名</label>
+                                <input type="text" class="form-control" id="account_name" name="account_name"
+                                    value="<?= isset($account) ? esc($account['account_name']) : '' ?>" required
                                     maxlength="50" pattern="^[a-zA-Z0-9_.-]+$"
                                     title="半角英数字、アンダースコア(_)、ハイフン(-)、ドット(.)のみ使用できます。">
                             </div>
@@ -75,8 +75,8 @@
                             <div class="col-md-6 mb-3">
                                 <label for="status" class="form-label">状態</label>
                                 <select class="form-select" id="status" name="status" required>
-                                    <option value="available" <?= old('status', $account['status'] ?? '') === 'available' ? 'selected' : '' ?>>有効</option>
-                                    <option value="restricted" <?= old('status', $account['status'] ?? '') === 'restricted' ? 'selected' : '' ?>>無効</option>
+                                    <option value="available" <?= old('status', $account['status'] ?? '') === 'available' ? 'selected' : '' ?>>利用可能</option>
+                                    <option value="restricted" <?= old('status', $account['status'] ?? '') === 'restricted' ? 'selected' : '' ?>>利用禁止</option>
                                     <option value="retired" <?= old('status', $account['status'] ?? '') === 'retired' ? 'selected' : '' ?>>廃止</option>
                                 </select>
                             </div>

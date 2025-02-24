@@ -24,14 +24,14 @@ class AccountController extends BaseController
             $accounts = $accountModel->withDeleted()->where('resource_id', $resource_id)
                 ->orderBy("CASE WHEN deleted_at IS NULL THEN 0 ELSE 1 END ASC", '', false)
                 ->orderBy('accounts.status', 'ASC')
-                ->orderBy('accounts.username', 'ASC')
+                ->orderBy('accounts.account_name', 'ASC')
                 ->findAll();
         } else {
             $accounts = $accountModel->withDeleted()->select('accounts.*, resources.name as resource_name')
                 ->join('resources', 'resources.id = accounts.resource_id', 'left')
                 ->orderBy("CASE WHEN accounts.deleted_at IS NULL THEN 0 ELSE 1 END ASC", '', false)
                 ->orderBy('accounts.status', 'ASC')
-                ->orderBy('accounts.username', 'ASC')
+                ->orderBy('accounts.account_name', 'ASC')
                 ->findAll();
         }
     
@@ -70,7 +70,7 @@ class AccountController extends BaseController
     
         $data = [
             'resource_id'     => $this->request->getPost('resource_id'),
-            'username'        => $this->request->getPost('username'),
+            'account_name'        => $this->request->getPost('account_name'),
             'password'        => $encodedPassword,
             'connection_type' => $this->request->getPost('connection_type'),
             'port'            => $this->request->getPost('port') !== '' ? $this->request->getPost('port') : -1,
@@ -80,8 +80,7 @@ class AccountController extends BaseController
     
         $accountModel->insert($data);
     
-        return redirect()->to(site_url('accounts/' . $data['resource_id']))
-                        ->with('message', 'アカウントが登録されました。');
+        return redirect()->to(site_url('accounts/'))->with('message', 'アカウントが登録されました。');
     }
 
     public function edit($id)
@@ -115,7 +114,7 @@ class AccountController extends BaseController
     
         $data = [
             'resource_id'     => $this->request->getPost('resource_id'),
-            'username'        => $this->request->getPost('username'),
+            'account_name'        => $this->request->getPost('account_name'),
             'connection_type' => $this->request->getPost('connection_type'),
             'port'            => $this->request->getPost('port') !== '' ? $this->request->getPost('port') : -1, 
             'description'     => $this->request->getPost('description'),
@@ -129,8 +128,7 @@ class AccountController extends BaseController
     
         $accountModel->update($id, $data);
     
-        return redirect()->to(site_url('accounts/' . $account['resource_id']))
-                        ->with('message', 'アカウントが更新されました。');
+        return redirect()->to(site_url('accounts'))->with('message', 'アカウントが更新されました。');
     }
 
     public function delete($id)

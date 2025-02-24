@@ -47,7 +47,7 @@
                         <?php if ($user->deleted_at): ?>
                             <span class="badge bg-secondary">削除済</span>
                         <?php else: ?>
-                            <?= $user->active ? '<span class="badge bg-success">有効</span>' : '<span class="badge bg-secondary">無効</span>' ?>
+                            <?= $user->active ? '<span class="badge bg-info">有効</span>' : '<span class="badge bg-danger">無効</span>' ?>
                         <?php endif; ?>
                     </td>
                     <td><?= $user->last_active ? $user->last_active->format('Y-m-d H:i:s') : '未アクティブ' ?></td>
