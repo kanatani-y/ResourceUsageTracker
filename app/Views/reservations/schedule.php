@@ -4,18 +4,19 @@
 
 <?= $this->section('main') ?>
 <div class="container">
-    <h3 class="mb-3"><i class="bi bi-list-check"></i> 予約スケジュール</h3>
-
-    <!-- 日付選択 -->
-    <form method="get" class="mb-3 d-flex align-items-center">
-        <label for="date" class="form-label me-2">日付選択:</label>
-        <input type="date" name="date" id="date" class="form-control w-auto me-2" value="<?= esc($selectedDate) ?>">
-    </form>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4 class="mb-0"><i class="bi bi-list-check"></i> 予約スケジュール</h4>
+        <!-- 日付選択 -->
+        <form method="get" class="d-flex align-items-center">
+            <label for="date" class="form-label me-2 mt-2">日付選択:</label>
+            <input type="date" name="date" id="date" class="form-control w-auto me-2" value="<?= esc($selectedDate) ?>">
+        </form>
+    </div>
 
     <!-- テーブル -->
-    <div class="table-responsive">
+    <div class="table-responsive" style="max-height: 74vh; overflow-y: auto;">
         <table class="table table-bordered table-hover text-center align-middle">
-            <thead class="table-light sticky-top">
+            <thead class="table-light sticky-top" style="z-index: 100;">
                 <tr>
                     <th colspan="2">リソース</th>
                     <th colspan="2">アカウント</th>
