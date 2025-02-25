@@ -73,11 +73,10 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="status" class="form-label">状態</label>
-                                <select class="form-select" id="status" name="status" required>
-                                    <option value="available" <?= old('status', $account['status'] ?? '') === 'available' ? 'selected' : '' ?>>利用可能</option>
-                                    <option value="restricted" <?= old('status', $account['status'] ?? '') === 'restricted' ? 'selected' : '' ?>>利用禁止</option>
-                                    <option value="retired" <?= old('status', $account['status'] ?? '') === 'retired' ? 'selected' : '' ?>>廃止</option>
+                                <label for="active" class="form-label">状態</label>
+                                <select class="form-select" id="active" name="active" required>
+                                    <option value="1" <?= old('active', $account['active'] ?? '') == 1 ? 'selected' : '' ?>>有効</option>
+                                    <option value="0" <?= old('active', $account['active'] ?? '') == 0 ? 'selected' : '' ?>>無効</option>
                                 </select>
                             </div>
                         </div>

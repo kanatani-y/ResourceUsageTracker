@@ -26,7 +26,7 @@
         <tbody>
             <?php foreach ($accounts as $account) : ?>
                 <tr class="<?= $account['deleted_at'] ? 'text-muted' : '' ?>">
-                    <td class="<?= $account['deleted_at'] ? 'bg-secondary-subtle' : '' ?>">
+                    <td>
                         <a href="<?= site_url('resources/show/' . $account['resource_id']) ?>" class="text-decoration-none">
                             <?php
                             $resourceIcons = [
@@ -59,19 +59,11 @@
                         <?php if ($account['deleted_at']) : ?>
                             <span class="badge bg-secondary">削除済</span>
                         <?php else : ?>
-                            <?php
-                            switch ($account['status']) {
-                                case 'available':
-                                    echo '<span class="badge bg-info">有効</span>';
-                                    break;
-                                case 'restricted':
-                                    echo '<span class="badge bg-danger">無効</span>';
-                                    break;
-                                case 'retired':
-                                    echo '<span class="badge bg-secondary">廃止</span>';
-                                    break;
-                            }
-                            ?>
+                            <?php if ($account['active'] == 1): ?>
+                                <span class="badge bg-info">有効</span>
+                            <?php else: ?>
+                                <span class="badge bg-danger">無効</span>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </td>
                     <td><?= esc($account['description'] ?? '-') ?></td>
@@ -91,7 +83,7 @@
                             <a href="<?= site_url('accounts/edit/' . $account['id']) ?>" class="btn btn-sm btn-primary">
                                 <i class="bi bi-pencil-square"></i> 編集
                             </a>
-                            <?php if ($account['status'] === 'retired') : ?>
+                            <?php if ($account['active'] == 0) : ?>
                                     <?= csrf_field() ?>
                                     <button type="button" class="btn btn-sm btn-danger <?= $account['deleted_at'] ? 'disabled' : '' ?>"
                                         data-bs-toggle="modal"

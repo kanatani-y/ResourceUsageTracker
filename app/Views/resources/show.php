@@ -143,19 +143,11 @@
                                     </td>
                                     <td><?= $account['port'] == -1 ? '-' : esc($account['port']) ?></td>
                                     <td>
-                                        <?php
-                                            switch ($account['status']) {
-                                                case 'available':
-                                                    echo '<span class="badge bg-info">有効</span>';
-                                                    break;
-                                                case 'restricted':
-                                                    echo '<span class="badge bg-danger">無効</span>';
-                                                    break;
-                                                case 'retired':
-                                                    echo '<span class="badge bg-secondary">廃止</span>';
-                                                    break;
-                                            }
-                                        ?>
+                                        <?php if ($account['deleted_at']): ?>
+                                            <span class="badge bg-secondary">削除済</span>
+                                        <?php else: ?>
+                                            <?= $account['active'] ? '<span class="badge bg-info">有効</span>' : '<span class="badge bg-danger">無効</span>' ?>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <span id="password-<?= esc($account['id']) ?>" class="password-mask">••••••</span>
@@ -174,7 +166,7 @@
                                             <i class="bi bi-pencil-square"></i> 編集
                                         </a>
                                         
-                                        <?php if ($account['status'] === 'retired') : ?>
+                                        <?php if ($account['active'] == 0) : ?>
                                             <form action="<?= site_url('accounts/delete/' . $account['id']) ?>" method="post" class="d-inline">
                                                 <?= csrf_field() ?>
                                                 <button type="button" class="btn btn-sm btn-danger <?= $account['deleted_at'] ? 'disabled' : '' ?>"

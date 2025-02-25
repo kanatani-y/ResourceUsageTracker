@@ -33,7 +33,7 @@
             
             foreach ($resources as $resource):
                 $resourceId = $resource['id'];
-                $resourceAccounts = $accounts[$resourceId] ?? [['id' => 0, 'account_name' => 'なし', 'status' => 'available']];
+                $resourceAccounts = $accounts[$resourceId] ?? [['id' => 0, 'account_name' => 'なし', 'active' => 1]];
                 $firstRow = true;
 
                 foreach ($resourceAccounts as $account):
@@ -96,12 +96,10 @@
                     <td class="text-start">
                         <?php if ($account['account_name'] === 'なし'): ?>
                             <span>-</span>
-                        <?php elseif ($account['status'] === 'available'): ?>
+                        <?php elseif ($account['active'] == 1): ?>
                             <span class="badge bg-info">有効</span>
-                        <?php elseif ($account['status'] === 'restricted'): ?>
+                        <?php elseif ($account['active'] == 0): ?>
                             <span class="badge bg-danger">無効</span>
-                        <?php elseif ($account['status'] === 'retired'): ?>
-                            <span class="badge bg-secondary">廃止</span>
                         <?php else: ?>
                             <span>-</span>
                         <?php endif; ?>
@@ -152,7 +150,7 @@
 
                             if ($isGuest) {
                                 $hourlySlots[$hour] = "<td></td>";
-                            } elseif ($account['status'] === 'available' && $resource['status'] === 'available') {
+                            } elseif ($account['active'] == 1 && $resource['status'] === 'available') {
                                 $hourlySlots[$hour] = "<td class='empty-slot' data-resource-id='" . esc($resource['id']) . "' 
                                                                         data-account-id='" . esc($account['id']) . "' 
                                                                         data-reservation-date='" . esc($selectedDate) . "' 

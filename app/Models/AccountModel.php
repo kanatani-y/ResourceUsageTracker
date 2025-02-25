@@ -17,7 +17,7 @@ class AccountModel extends Model
         'password',
         'connection_type',
         'port',
-        'status',
+        'active',
         'description',
         'created_at', 
         'updated_at', 
@@ -55,11 +55,11 @@ class AccountModel extends Model
                 'greater_than_equal_to' => 'ポート番号は -1（未指定） または 1～65535 の数値で入力してください。',
             ]
         ],
-        'status' => [
-            'rules' => 'required|in_list[available,restricted,retired]',
-            'label' => 'ステータス',
+        'active' => [
+            'rules' => 'required|in_list[0,1]',
+            'label' => '状態',
             'errors' => [
-                'in_list' => 'ステータスは「利用可能, 利用禁止, 廃止」のいずれかを選択してください。',
+                'in_list' => '状態は「有効, 無効」のいずれかを選択してください。',
             ]
         ],
         'description' => [

@@ -4,24 +4,39 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class AddStatusToAccounts extends Migration
+class ModifyAccountsTable extends Migration
 {
     public function up()
     {
+        // `active` カラムの追加
         $this->forge->addColumn('accounts', [
-            'status' => [
-                'type'       => 'ENUM',
-                'constraint' => ['available', 'restricted', 'retired'],
-                'default'    => 'available',
+            'active' => [
+                'type'       => 'TINYINT',
+                'constraint' => 1,
+                'default'    => 1,
                 'null'       => false,
-                'comment'    => '利用可能: available, 利用禁止: restricted, 廃止: retired',
-                'after'      => 'port'
+                'after'      => 'port' // `port` の直後に追加
             ],
         ]);
+
+        // `status` カラムの削除
+        $this->forge->dropColumn('accounts', 'status');
     }
 
     public function down()
     {
-        $this->forge->dropColumn('accounts', 'status');
+        // `active` カラムの削除
+        $this->forge->dropColumn('accounts', 'active');
+
+        // `status` カラムの復元
+        $this->forge->addColumn('accounts', [
+            'status' => [
+                'type'       => "ENUM('available', 'restricted', 'retired')",
+                'default'    => 'available',
+                'null'       => false,
+                'comment'    => '使用可: available, 使用禁止: restricted, 廃止: retired',
+                'after'      => 'port'
+            ],
+        ]);
     }
 }
