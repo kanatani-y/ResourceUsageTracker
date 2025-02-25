@@ -146,28 +146,30 @@
     </nav>
 
     <main role="main" class="container mt-3">
-    <?php if (session()->getFlashdata('message')) : ?>
-        <div class="alert alert-success">
-            <?= esc(session()->getFlashdata('message')) ?>
-        </div>
-    <?php endif; ?>
+        <?php if (session()->getFlashdata('message')) : ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?= esc(session()->getFlashdata('message')) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="閉じる"></button>
+            </div>
+        <?php endif; ?>
 
-    <?php if (session()->getFlashdata('error')) : ?>
-        <div class="alert alert-danger">
-            <?= esc(session()->getFlashdata('error')) ?>
-        </div>
-    <?php endif; ?>
+        <?php if (session()->getFlashdata('error')) : ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <?= esc(session()->getFlashdata('error')) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="閉じる"></button>
+            </div>
+        <?php endif; ?>
 
-    <?php if (session()->getFlashdata('errors')) : ?>
-        <div class="alert alert-danger">
-            <?php foreach (session()->getFlashdata('errors') as $error) : ?>
-                <?= esc($error) ?><br>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+        <?php if (session()->getFlashdata('errors')) : ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <?php foreach (session()->getFlashdata('errors') as $error) : ?>
+                    <?= esc($error) ?><br>
+                <?php endforeach; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="閉じる"></button>
+            </div>
+        <?php endif; ?>
 
         <?= $this->renderSection('main') ?>
-
 
         <!-- 汎用確認モーダル -->
         <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
