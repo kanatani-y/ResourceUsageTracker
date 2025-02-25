@@ -23,14 +23,14 @@ class AccountController extends BaseController
         if ($resource) {
             $accounts = $accountModel->withDeleted()->where('resource_id', $resource_id)
                 ->orderBy("CASE WHEN deleted_at IS NULL THEN 0 ELSE 1 END ASC", '', false)
-                ->orderBy('accounts.status', 'ASC')
+                ->orderBy('accounts.active', 'DESC')
                 ->orderBy('accounts.account_name', 'ASC')
                 ->findAll();
         } else {
             $accounts = $accountModel->withDeleted()->select('accounts.*, resources.name as resource_name, resources.type as resource_type')
                 ->join('resources', 'resources.id = accounts.resource_id', 'left')
                 ->orderBy("CASE WHEN accounts.deleted_at IS NULL THEN 0 ELSE 1 END ASC", '', false)
-                ->orderBy('accounts.status', 'ASC')
+                ->orderBy('accounts.active', 'DESC')
                 ->orderBy('accounts.account_name', 'ASC')
                 ->findAll();
         }
@@ -75,7 +75,7 @@ class AccountController extends BaseController
             'connection_type' => $this->request->getPost('connection_type'),
             'port'            => $this->request->getPost('port') !== '' ? $this->request->getPost('port') : -1,
             'description'     => $this->request->getPost('description'),
-            'status'          => $this->request->getPost('status') ?? 'available',
+            'active'          => $this->request->getPost('active') ?? 1,
         ];
     
         $accountModel->insert($data);
@@ -118,7 +118,7 @@ class AccountController extends BaseController
             'connection_type' => $this->request->getPost('connection_type'),
             'port'            => $this->request->getPost('port') !== '' ? $this->request->getPost('port') : -1, 
             'description'     => $this->request->getPost('description'),
-            'status'          => $this->request->getPost('status'),
+            'active'          => $this->request->getPost('active'),
         ];
     
         // パスワード変更があれば更新
@@ -145,9 +145,9 @@ class AccountController extends BaseController
             return redirect()->to(site_url('accounts'))->with('error', '操作の権限がありません。');
         }
     
-        // **リソースのステータスが "retired"（廃止）でない場合は削除不可**
-        if ($account['status'] !== 'retired') {
-            return redirect()->to(site_url('accounts'))->with('error', '廃止されたアカウントのみ削除できます。');
+        // **リソースのステータスが 0:無効 でない場合は削除不可**
+        if ($account['active'] != 0) {
+            return redirect()->to(site_url('accounts'))->with('error', '無効のアカウントのみ削除できます。');
         }
     
         // **削除処理（論理削除）**

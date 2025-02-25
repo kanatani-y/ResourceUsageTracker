@@ -58,7 +58,7 @@ class ReservationController extends BaseController
             $account = $accountModel->find($account_id);
     
             // 利用禁止または廃止のアカウントは予約不可
-            if ($account && in_array($account['status'], ['restricted', 'retired'])) {
+            if ($account && in_array($account['active'], [0])) {
                 return redirect()->to(site_url('reservations/schedule'))->with('error', 'このアカウントは予約できません。');
             }
         }
@@ -70,7 +70,7 @@ class ReservationController extends BaseController
         $accounts = [];
         foreach ($resources as $resource) {
             $resourceAccounts = $accountModel->where('resource_id', $resource['id'])
-                                            ->where('status', 'available') // 予約可能なアカウントのみ取得
+                                            ->where('active', 1) // 予約可能なアカウントのみ取得
                                             ->findAll();
     
             $accounts[$resource['id']] = !empty($resourceAccounts) ? $resourceAccounts : [];
@@ -188,13 +188,13 @@ class ReservationController extends BaseController
         $accounts = [];
         foreach ($resources as $resource) {
             $resourceAccounts = $accountModel
-                ->select('id, account_name, status, connection_type')
+                ->select('id, account_name, active, connection_type')
                 ->where('resource_id', $resource['id'])
                 ->findAll();
     
             if (empty($resourceAccounts)) {
                 // アカウントがない場合、デフォルト値を追加
-                $accounts[$resource['id']] = [['id' => 0, 'account_name' => 'なし', 'status' => 'available', 'connection_type' => '']];
+                $accounts[$resource['id']] = [['id' => 0, 'account_name' => 'なし', 'active' => 1, 'connection_type' => '']];
             } else {
                 $accounts[$resource['id']] = $resourceAccounts;
             }
@@ -204,7 +204,7 @@ class ReservationController extends BaseController
         $reservations = $reservationModel
             ->select('reservations.*, resources.name as resource_name, resources.type as resource_type, 
                 IFNULL(accounts.account_name, "なし") as account_name, 
-                accounts.status as account_status, 
+                accounts.active as account_active, 
                 users.fullname as user_name')
             ->join('resources', 'resources.id = reservations.resource_id')
             ->join('accounts', 'accounts.id = reservations.account_id AND reservations.account_id > 0', 'left')
@@ -246,8 +246,8 @@ class ReservationController extends BaseController
 
         $account = $accountModel->find($reservation['account_id']);
     
-        // 利用禁止または廃止のアカウントは予約不可
-        if ($account && in_array($account['status'], ['restricted', 'retired'])) {
+        // 無効のアカウントは予約不可
+        if ($account && in_array($account['active'], [0])) {
             return redirect()->route('reservations.schedule')->with('error', 'このアカウントは予約できません。');
         }
         
@@ -258,7 +258,7 @@ class ReservationController extends BaseController
         $accounts = [];
         foreach ($resources as $resource) {
             $resourceAccounts = $accountModel->where('resource_id', $resource['id'])
-                                            ->where('status', 'available') // 予約可能なアカウントのみ取得
+                                            ->where('active', 1) // 予約可能なアカウントのみ取得
                                             ->findAll();
     
             $accounts[$resource['id']] = !empty($resourceAccounts) ? $resourceAccounts : [];

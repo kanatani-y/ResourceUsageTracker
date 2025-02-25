@@ -36,7 +36,7 @@ class ResourceController extends BaseController
         }
     
         $accounts = $accountModel->where('resource_id', $id)
-            ->orderBy('status', 'ASC')
+            ->orderBy('active', 'DESC')
             ->orderBy('account_name', 'ASC')
             ->findAll();
     
