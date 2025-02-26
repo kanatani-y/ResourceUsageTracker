@@ -73,11 +73,17 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="active" class="form-label">状態</label>
-                                <select class="form-select" id="active" name="active" required>
-                                    <option value="1" <?= old('active', $account['active'] ?? '') == 1 ? 'selected' : '' ?>>有効</option>
-                                    <option value="0" <?= old('active', $account['active'] ?? '') == 0 ? 'selected' : '' ?>>無効</option>
-                                </select>
+                                <label class="form-label">状態</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="active" id="active1" value="1"
+                                        <?= old('active', isset($account) ? $account['active'] : 1) == 1 ? 'checked' : '' ?>>
+                                    <label class="form-check-label" for="active1">有効</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="active" id="active0" value="0"
+                                        <?= old('active', isset($account) ? $account['active'] : 1) == 0 ? 'checked' : '' ?>>
+                                    <label class="form-check-label" for="active0">無効</label>
+                                </div>
                             </div>
                         </div>
                         <div class="mb-3">

@@ -132,7 +132,7 @@ class UserController extends BaseController
             return redirect()->route('admin.users.index')->with('error', 'ユーザーが見つかりません。');
         }
     
-        // **ログインユーザが自身の "active" や "group" を変更できないようにする**
+        // **ログインユーザが自身の "active" を変更できないようにする**
         if (auth()->user()->id == $id) {
             if ($this->request->getPost('active') !== (string) $user->active) {
                 return redirect()->back()->with('error', '自身のアカウントの有効/無効を変更することはできません。');
@@ -144,7 +144,6 @@ class UserController extends BaseController
             return redirect()->back()->with('error', '管理者のグループを変更することはできません。');
         }
     
-        // **更新データの作成**
         $updateData = [
             'fullname' => $this->request->getPost('fullname'),
             'email'    => $this->request->getPost('email'),
@@ -153,6 +152,19 @@ class UserController extends BaseController
         // **Administrator 以外は active を更新可能**
         if ($user->username !== 'admin') {
             $updateData['active'] = $this->request->getPost('active');
+        }
+    
+        // **ユーザー名が変更された場合のみ更新**
+        $newUsername = $this->request->getPost('username');
+        if ($newUsername !== $user->username) {
+            // **同じ `username` が既に存在しないかチェック**
+            $existingUser = $users->where('username', $newUsername)->where('id !=', $id)->first();
+            if ($existingUser) {
+                return redirect()->back()->withInput()->with('error', 'そのユーザー名は既に使用されています。');
+            }
+    
+            // `username` を `updateData` に追加
+            $updateData['username'] = $newUsername;
         }
     
         // **パスワード変更がある場合のみ更新**
