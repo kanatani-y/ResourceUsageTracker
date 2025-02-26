@@ -14,9 +14,22 @@
     <style>
         body {
             padding-top: 56px;
+            opacity: 0;
+            animation: fadeIn 0.3s ease-in forwards;
+        }
+        /* アニメーション定義 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .table-hover tbody tr:hover {
+            background-color: #EEFFFF !important; /* 任意の色 */
         }
     </style>
-
     <?= $this->renderSection('pageStyles') ?>
 </head>
 
@@ -242,22 +255,5 @@
 
     <!-- Bootstrap JavaScript -->
     <script src="<?= base_url('assets/js/bootstrap.bundle.min.js') ?>"></script>
-    <style>
-        /* フェードインの基本スタイル */
-        body {
-            opacity: 0;
-            animation: fadeIn 0.5s ease-in forwards;
-        }
-
-        /* アニメーション定義 */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-    </style>
 </body>
 </html>

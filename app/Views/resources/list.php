@@ -31,7 +31,7 @@
                 </thead>
                 <tbody>
                     <?php foreach ($resources as $resource) : ?>
-                        <tr class="<?= $resource['deleted_at'] ? 'text-muted' : '' ?>">
+                        <tr class="<?= $resource['deleted_at'] ? 'text-muted' : '' ?>" style="<?= $resource['deleted_at'] ? 'background-color: #EEEEEE;' : '' ?>">
                             <td><?= $resource['id'] ?></td>
                             <td class="text-decoration-none fw-bold">
                                 <a href="<?= site_url('resources/show/' . $resource['id']) ?>" class="text-decoration-none">

@@ -26,7 +26,7 @@
             </thead>
             <tbody>
                 <?php foreach ($accounts as $account) : ?>
-                    <tr class="<?= $account['deleted_at'] ? 'text-muted' : '' ?>">
+                    <tr class="<?= $account['deleted_at'] ? 'text-muted' : '' ?>" style="<?= $account['deleted_at'] ? 'background-color: #EEEEEE;' : '' ?>">
                         <td>
                             <a href="<?= site_url('resources/show/' . $account['resource_id']) ?>" class="text-decoration-none">
                                 <?php
