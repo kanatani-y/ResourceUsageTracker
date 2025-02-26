@@ -81,18 +81,18 @@
                                 <?php endif; ?>
                             </div>
 
-                            <!-- 状態 -->
+                            <!-- ユーザ状態 -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">ユーザ状態</label>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="active" id="activeYes" value="1" 
-                                        <?= isset($user) && $user->active ? 'checked' : '' ?>
+                                        <?= old('active', isset($user) ? $user->active : 1) == 1 ? 'checked' : '' ?>
                                         <?= isset($user) && $user->id == $loggedInUser->id ? 'disabled' : '' ?>>
                                     <label class="form-check-label" for="activeYes">有効</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="active" id="activeNo" value="0" 
-                                        <?= isset($user) && !$user->active ? 'checked' : '' ?>
+                                        <?= old('active', isset($user) ? $user->active : 1) == 0 ? 'checked' : '' ?>
                                         <?= isset($user) && $user->id == $loggedInUser->id ? 'disabled' : '' ?>>
                                     <label class="form-check-label" for="activeNo">無効</label>
                                 </div>

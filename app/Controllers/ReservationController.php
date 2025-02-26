@@ -371,7 +371,7 @@ class ReservationController extends BaseController
             return redirect()->route('reservations.schedule')->with('error', 'この予約を削除する権限がありません。');
         }
     
-        $reservationModel->delete($id, true);
+        $reservationModel->delete($id);
         return redirect()->route('reservations.schedule')->with('message', '予約を削除しました。');
     }
 
