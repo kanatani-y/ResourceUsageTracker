@@ -26,7 +26,7 @@
             </thead>
             <tbody>
                 <?php foreach ($users as $user): ?>
-                    <tr class="<?= $user->deleted_at ? 'text-muted' : '' ?>">
+                    <tr class="<?= $user->deleted_at ? 'text-muted' : '' ?>" style="<?= $user->deleted_at ? 'background-color: #EEEEEE;' : '' ?>">
                         <td><?= esc($user->id) ?></td>
                         <td><?= esc($user->username) ?></td>
                         <td><?= esc($user->fullname ?? '-') ?></td>

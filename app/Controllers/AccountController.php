@@ -31,7 +31,7 @@ class AccountController extends BaseController
                 ->join('resources', 'resources.id = accounts.resource_id', 'left')
                 ->orderBy("CASE WHEN accounts.deleted_at IS NULL THEN 0 ELSE 1 END ASC", '', false)
                 ->orderBy('accounts.active', 'DESC')
-                ->orderBy('accounts.account_name', 'ASC')
+                ->orderBy('resources.name', 'ASC')
                 ->findAll();
         }
     
