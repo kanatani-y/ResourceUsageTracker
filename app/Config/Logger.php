@@ -147,4 +147,12 @@ class Logger extends BaseConfig
         //     'messageType' => 0,
         // ],
     ];
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // .env の設定を優先し、なければデフォルト値を設定
+        $this->threshold = env('logger.threshold') ?? (ENVIRONMENT === 'production' ? 4 : 9);
+    }
 }
