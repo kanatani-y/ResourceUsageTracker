@@ -55,4 +55,36 @@ abstract class BaseController extends Controller
 
         // E.g.: $this->session = service('session');
     }
+
+        /**
+     * **汎用ログ出力関数**
+     *
+     * @param string $entityType エンティティの種類（reservation, resource, account, user など）
+     * @param string $action 操作内容（created, updated, deleted, failed）
+     * @param int|null $entityId 操作対象のID
+     * @param array $data 操作対象のデータ
+     * @param int|null $actorId 操作を実行したユーザーID（null の場合はログインユーザー）
+     * @param string|null $errorMessage エラー発生時のメッセージ（エラー時のみ）
+     */
+    protected function logAction(string $entityType, string $action, ?int $entityId, array $data, ?int $actorId = null, ?string $errorMessage = null)
+    {
+        $actorId = $actorId ?? auth()->user()->id;
+        $actorName = auth()->user()->fullname ?? "Unknown User";
+
+        $logData = [
+            'entity_type' => $entityType, // reservation, resource, account, user など
+            'entity_id' => $entityId, // 変更対象のID
+            'actor_id' => $actorId,  // 操作を実行したユーザー
+            'actor_name' => $actorName,
+            'action' => $action, // created, updated, deleted, failed
+            'data' => $data, // 操作内容
+        ];
+
+        if ($errorMessage) {
+            $logData['error'] = $errorMessage;
+            log_message('error', json_encode($logData, JSON_UNESCAPED_UNICODE));
+        } else {
+            log_message('info', json_encode($logData, JSON_UNESCAPED_UNICODE));
+        }
+    }
 }
