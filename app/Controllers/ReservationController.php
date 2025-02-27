@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\ReservationModel;
 use App\Models\AccountModel;
 use App\Models\ResourceModel;
+use App\Models\UserModel;
 
 class ReservationController extends BaseController
 {
@@ -136,6 +137,11 @@ class ReservationController extends BaseController
         $startDateTime = "$date $startTime:00"; // YYYY-MM-DD HH:MM:00
         $endDateTime = "$date $endTime:00";     // YYYY-MM-DD HH:MM:00
 
+            // **開始時刻 < 終了時刻 のバリデーション**
+        if (strtotime($startDateTime) >= strtotime($endDateTime)) {
+            return redirect()->back()->withInput()->with('error', '開始時刻は終了時刻より前に設定してください。');
+        }
+
         // **管理者以外は過去日の予約を登録できない**
         if (!auth()->user()->inGroup('admin') && $date < date('Y-m-d')) {
             return redirect()->back()->withInput()->with('error', '過去日の予約はできません。');
@@ -152,6 +158,16 @@ class ReservationController extends BaseController
             $account_id = -1; // アカウントなしのデフォルト値
         }
 
+        // **管理者が代理登録した場合、使用目的に"ユーザ氏名＋代理登録:" を追加**
+        $purpose = $this->request->getPost('purpose');
+        $userModel = new UserModel();
+        if (auth()->user()->inGroup('admin') && $user_id != auth()->user()->id) {
+            $user = $userModel->find($user_id);
+            if ($user) {
+                $purpose = "【{$user->fullname} 代理登録】" . $purpose;
+            }
+        }
+
         // **データ準備**
         $data = [
             'resource_id' => $this->request->getPost('resource_id'),
@@ -159,7 +175,7 @@ class ReservationController extends BaseController
             'user_id'     => $user_id,
             'start_time'  => $startDateTime,
             'end_time'    => $endDateTime,
-            'purpose'     => $this->request->getPost('purpose'),
+            'purpose'     => $purpose,
         ];
 
         // **予約の重複チェック**
@@ -167,8 +183,13 @@ class ReservationController extends BaseController
             return redirect()->back()->withInput()->with('error', 'この時間帯にはすでに予約が入っています。');
         }
 
-        // **データ保存**
-        $reservationModel->insert($data);
+        try {
+            $reservationModel->insert($data);
+            $this->logAction('reservation', 'created', $reservationModel->insertID(), $data, auth()->user()->id);
+        } catch (\Exception $e) {
+            $this->logAction('reservation', 'failed', null, $data, auth()->user()->id, '予約作成時にエラー発生: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', '予約の登録中にエラーが発生しました。');
+        }
 
         return redirect()->to(site_url('reservations/schedule') . '?date=' . urlencode($date))
                 ->with('message', '予約を追加しました。');
@@ -320,6 +341,11 @@ class ReservationController extends BaseController
         $startDateTime = "$date $startTime:00";
         $endDateTime = "$date $endTime:00";
 
+        // **開始時刻 < 終了時刻 のバリデーション**
+        if (strtotime($startDateTime) >= strtotime($endDateTime)) {
+            return redirect()->back()->withInput()->with('error', '開始時刻は終了時刻より前に設定してください。');
+        }
+
         // **管理者以外は過去日の予約を変更できない**
         if (!auth()->user()->inGroup('admin') && $date < date('Y-m-d')) {
             return redirect()->route('reservations.schedule')->with('error', '過去日の予約は変更できません。');
@@ -343,7 +369,7 @@ class ReservationController extends BaseController
             'user_id'     => $user_id,
             'start_time'  => $startDateTime,
             'end_time'    => $endDateTime,
-            'purpose'     => $this->request->getPost('purpose'),
+            'purpose'     => $purpose,
         ];
     
         // **予約の重複チェック**
@@ -351,8 +377,13 @@ class ReservationController extends BaseController
             return redirect()->back()->withInput()->with('error', 'この時間帯にはすでに予約が入っています。');
         }
 
-        // **予約情報の更新**
-        $reservationModel->update($id, $data);
+        try {
+            $reservationModel->update($id, $data);
+            $this->logAction('reservation', 'updated', $id, $data, auth()->user()->id);
+        } catch (\Exception $e) {
+            $this->logAction('reservation', 'failed', $id, $data, auth()->user()->id, '予約更新時にエラー発生: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', '予約の更新中にエラーが発生しました。');
+        }
 
         return redirect()->to(route_to('reservations.schedule', ['date' => $date]))
                         ->with('message', '予約が更新されました。');
@@ -371,7 +402,29 @@ class ReservationController extends BaseController
             return redirect()->route('reservations.schedule')->with('error', 'この予約を削除する権限がありません。');
         }
     
-        $reservationModel->delete($id);
+        try {
+            // **予約の削除実行**
+            $reservationModel->delete($id);
+
+            // **削除成功時のログ**
+            $this->logAction(
+                'reservation', 
+                'deleted', 
+                $id, 
+                ['user_id' => auth()->user()->id, 'reservation_user_id' => $reservation['user_id']]
+            );
+    
+        } catch (\Exception $e) {
+            $this->logAction(
+                'reservation', 
+                'failed', 
+                $id, 
+                ['user_id' => auth()->user()->id, 'reservation_user_id' => $reservation['user_id']], 
+                auth()->user()->id, 
+                '予約削除中にエラー発生: ' . $e->getMessage()
+            );
+            return redirect()->route('reservations.schedule')->with('error', '予約の削除中にエラーが発生しました。');
+        }
         return redirect()->route('reservations.schedule')->with('message', '予約を削除しました。');
     }
 
