@@ -162,7 +162,7 @@ class ReservationController extends BaseController
         $purpose = $this->request->getPost('purpose');
         $userModel = new UserModel();
         if (auth()->user()->inGroup('admin') && $user_id != auth()->user()->id) {
-            $user = $userModel->find($user_id);
+            $user = $userModel->find(auth()->user()->id);
             if ($user) {
                 $purpose = "【{$user->fullname} 代理登録】" . $purpose;
             }
